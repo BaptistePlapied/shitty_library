@@ -1,0 +1,133 @@
+Mtx matrix1;
+    Mtx matrix1comp;
+
+    Mtx_init(&matrix1, 3, 3, NULL);
+    Mtx_init(&matrix1comp, 3, 3, NULL);
+
+    // printf("rank m : %zu\n",Mtx_rank(&matrix1));
+    // printf("m :\n");
+    // Mtx_print(&matrix1);
+
+    /*
+    // CHOLESKY
+    printf("########################################\n");
+    printf("                Test CHOLESKY\n");
+    printf("########################################\n");
+
+    float mat_cholesky[3*3] =   {4, 2, -1,
+                                 2, 5, 1,
+                                -1, 1, 3};
+
+    Mtx_copy_list(&matrix1, mat_cholesky);
+
+    printf("rank m : %zu\n",Mtx_rank(&matrix1));
+    printf("m :\n"); Mtx_print(&matrix1); Mtx matrix1l; Mtx_init(&matrix1l, 3, 3, NULL);
+    Mtx matrix1Remake; Mtx_init(&matrix1Remake, 3, 3, NULL); Mtx id; Mtx_init(&id, 3, 3,
+    NULL); Mtx_cholesky(&matrix1, &matrix1l);
+
+    printf("ml : \n");
+    Mtx_print(&matrix1l);
+    printf("ml^T : \n");
+    Mtx_T(&matrix1l, NULL);
+    Mtx_print(&matrix1l);
+    Mtx_T(&matrix1l, NULL);
+    printf("m remake : ml ml^T \n");
+    Mtx_T(&matrix1l, &matrix1Remake);
+    Mtx_mult(&matrix1l, &matrix1Remake, &matrix1Remake);
+    Mtx_print(&matrix1Remake);
+    */
+
+    //QR decomposition test
+    /*
+    printf("########################################\n");
+    printf("                Test QR\n");
+    printf("########################################\n");
+
+
+    Mtx matrix1q;
+    Mtx matrix1r;
+    Mtx matrix1Remake;
+    Mtx id;
+
+    Mtx_init(&id, 3, 3, NULL);
+    Mtx_init(&matrix1r, 3, 3, NULL);
+    Mtx_init(&matrix1q, 3, 3, NULL);
+    Mtx_init(&matrix1Remake, 3, 3, NULL);
+
+    float mat_cholesky[3*3] =   { 5,-4, 3,
+                                 -4, 5, 2,
+                                  2, 2,-1};
+
+    Mtx_copy_list(&matrix1, mat_cholesky);
+
+    printf("rank m : %zu\n",Mtx_rank(&matrix1));
+    printf("m :\n");
+    Mtx_print(&matrix1);
+
+
+    Mtx_qr(&matrix1, &matrix1q, &matrix1r);
+    Mtx_mult(&matrix1q, &matrix1r,&matrix1Remake);
+    Mtx_mult(&matrix1q, Mtx_T(&matrix1q, &id), &id);
+
+    printf("q :\n");
+    Mtx_print(&matrix1q);
+    printf("r :\n");
+    Mtx_print(&matrix1r);
+    printf("reconstistion of m by qr :\n");
+    Mtx_print(&matrix1Remake);
+    printf("qq^T = id :\n");
+    Mtx_print(&id);
+    
+    // eigen value
+    Mtx Ai;
+    Mtx Qi;
+    Mtx Ri;
+    Mtx_init(&Ai,3,3,NULL);
+    Mtx_copy_list(&Ai, mat_cholesky);
+    Mtx_init(&Qi,3,3,NULL);
+    Mtx_init(&Ri,3,3,NULL);
+
+    for (size_t i = 0; i < 400; i++){
+        Mtx_qr(&Ai, &Qi, &Ri);
+        Mtx_mult(&Ri, &Qi, &Ai);
+    }
+    printf("eigen value :\n");
+    Mtx_print(&Ai);
+
+    //eigen vector
+
+    */
+    /*
+    //LU decomposition test
+    printf("########################################\n");
+    printf("                Test LU\n");
+    printf("########################################\n");
+
+
+    Mtx matrix1p;
+    Mtx matrix1l;
+    Mtx matrix1u;
+
+    float mat_cholesky[3*3] =   {4, 2, -1,
+                                 2, 5, 1,
+                                -1, 1, 3};
+
+    Mtx_copy_list(&matrix1, mat_cholesky);
+
+    printf("rank m : %zu\n",Mtx_rank(&matrix1));
+    printf("m :\n");
+    Mtx_print(&matrix1);
+
+
+    Mtx_lu_pp(&matrix1, &matrix1p, &matrix1l, &matrix1u, NULL);
+
+    printf("p :\n");
+    Mtx_print(&matrix1p);
+    printf("l :\n");
+    Mtx_print(&matrix1l);
+    printf("u :\n");
+    Mtx_print(&matrix1u);
+    printf("reformation l x u :\n");
+    Mtx_print(Mtx_mult( &matrix1p, Mtx_mult(&matrix1l, &matrix1u, NULL), NULL));
+    */
+

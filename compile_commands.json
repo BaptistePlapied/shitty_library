@@ -1,0 +1,74 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-g",
+      "-I/usr/local/include",
+      "-I/usr/local/include/SDL2",
+      "-D_THREAD_SAFE",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "build/main.o",
+      "src/main.c"
+    ],
+    "directory": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS",
+    "file": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/src/main.c",
+    "output": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/build/main.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-g",
+      "-I/usr/local/include",
+      "-I/usr/local/include/SDL2",
+      "-D_THREAD_SAFE",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "build/matrix_ope.o",
+      "src/matrix_ope.c"
+    ],
+    "directory": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS",
+    "file": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/src/matrix_ope.c",
+    "output": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/build/matrix_ope.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-g",
+      "-I/usr/local/include",
+      "-I/usr/local/include/SDL2",
+      "-D_THREAD_SAFE",
+      "-S",
+      "-Iinclude",
+      "-o",
+      "build/bin/main.s",
+      "src/main.c"
+    ],
+    "directory": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS",
+    "file": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/src/main.c",
+    "output": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/build/bin/main.s"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-g",
+      "-I/usr/local/include",
+      "-I/usr/local/include/SDL2",
+      "-D_THREAD_SAFE",
+      "-S",
+      "-Iinclude",
+      "-o",
+      "build/bin/matrix_ope.s",
+      "src/matrix_ope.c"
+    ],
+    "directory": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS",
+    "file": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/src/matrix_ope.c",
+    "output": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/build/bin/matrix_ope.s"
+  }
+]

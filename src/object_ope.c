@@ -1,5 +1,4 @@
 #include "the_header_file.h"
-#include <math.h>
 
 
 
@@ -64,9 +63,9 @@ Vect Triangle_center(Triangle *triangle){
     Vect center;
     Vect_init(&center, 3, NULL);
     
-    Vect_add(&center, &triangle->p[0], NULL);
-    Vect_add(&center, &triangle->p[1], NULL);
-    Vect_add(&center, &triangle->p[2], NULL);
+    Vect_add(&center, &triangle->p[0].V, NULL);
+    Vect_add(&center, &triangle->p[1].V, NULL);
+    Vect_add(&center, &triangle->p[2].V, NULL);
     
     Vect_scal(&center, 1.0/3.0, NULL);
     return center;
@@ -78,7 +77,7 @@ Vect Mesh_center(Mesh *mesh){
 
     for (size_t i = 0; i < mesh->numtris; i ++){
         for (size_t j = 0; j < mesh->numtris; j++){
-            Vect_add(&center, &mesh->tris[i].p[j], NULL);
+            Vect_add(&center, &mesh->tris[i].p[j].V, NULL);
         }
     }
     Vect_scal(&center, 1.0/ (mesh->numtris * 3), NULL);
@@ -99,9 +98,9 @@ Vect *Vect_tr(Vect *vect, float dx, float dy, float dz){
 
 Triangle *Triangle_tr(Triangle *triangle, float dx, float dy, float dz){
     // only the p move for now
-    Vect_tr(&triangle->p[0], dx, dy, dz);
-    Vect_tr(&triangle->p[1], dx, dy, dz);
-    Vect_tr(&triangle->p[2], dx, dy, dz);
+    Vect_tr(&triangle->p[0].V, dx, dy, dz);
+    Vect_tr(&triangle->p[1].V, dx, dy, dz);
+    Vect_tr(&triangle->p[2].V, dx, dy, dz);
     return triangle;
 }
 
@@ -124,13 +123,13 @@ Triangle *Triangle_scal(Triangle *triangle, Vect *center, float ratio){
         Vect_init(&center_triangle, 3, NULL);
         center_triangle = Triangle_center(triangle);
        
-        Vect_add(&center_triangle,Vect_scal(Vect_sub(&triangle->p[0], &center_triangle, &temp), ratio, NULL),&triangle->p[0]);
-        Vect_add(&center_triangle,Vect_scal(Vect_sub(&triangle->p[1], &center_triangle, &temp), ratio, NULL),&triangle->p[1]);
-        Vect_add(&center_triangle,Vect_scal(Vect_sub(&triangle->p[2], &center_triangle, &temp), ratio, NULL),&triangle->p[2]);
+        Vect_add(&center_triangle,Vect_scal(Vect_sub(&triangle->p[0].V, &center_triangle, &temp), ratio, NULL),&triangle->p[0].V);
+        Vect_add(&center_triangle,Vect_scal(Vect_sub(&triangle->p[1].V, &center_triangle, &temp), ratio, NULL),&triangle->p[1].V);
+        Vect_add(&center_triangle,Vect_scal(Vect_sub(&triangle->p[2].V, &center_triangle, &temp), ratio, NULL),&triangle->p[2].V);
     }else{
-        Vect_add(center,Vect_scal(Vect_sub(&triangle->p[0], center, &temp), ratio, NULL),&triangle->p[0]);
-        Vect_add(center,Vect_scal(Vect_sub(&triangle->p[1], center, &temp), ratio, NULL),&triangle->p[1]);
-        Vect_add(center,Vect_scal(Vect_sub(&triangle->p[2], center, &temp), ratio, NULL),&triangle->p[2]);
+        Vect_add(center,Vect_scal(Vect_sub(&triangle->p[0].V, center, &temp), ratio, NULL),&triangle->p[0].V);
+        Vect_add(center,Vect_scal(Vect_sub(&triangle->p[1].V, center, &temp), ratio, NULL),&triangle->p[1].V);
+        Vect_add(center,Vect_scal(Vect_sub(&triangle->p[2].V, center, &temp), ratio, NULL),&triangle->p[2].V);
 
     }
     return triangle;
@@ -243,14 +242,14 @@ Vect *Vect_rot(Vect *vect, Vect *pivot, Quaternion *quaternion, Vect* vect_r){
 
 Triangle *Triangle_rot(Triangle *triangle, Vect *pivot, Quaternion *quaternion, Triangle *triangle_r){
     if (triangle_r == NULL){
-        Vect_rot(&triangle->p[0], pivot, quaternion, NULL);
-        Vect_rot(&triangle->p[1], pivot, quaternion, NULL);
-        Vect_rot(&triangle->p[2], pivot, quaternion, NULL);
+        Vect_rot(&triangle->p[0].V, pivot, quaternion, NULL);
+        Vect_rot(&triangle->p[1].V, pivot, quaternion, NULL);
+        Vect_rot(&triangle->p[2].V, pivot, quaternion, NULL);
         return triangle;
     }else{
-        Vect_rot(&triangle->p[0], pivot, quaternion, &triangle_r->p[0]);
-        Vect_rot(&triangle->p[1], pivot, quaternion, &triangle_r->p[1]);
-        Vect_rot(&triangle->p[2], pivot, quaternion, &triangle_r->p[2]);
+        Vect_rot(&triangle->p[0].V, pivot, quaternion, &triangle_r->p[0].V);
+        Vect_rot(&triangle->p[1].V, pivot, quaternion, &triangle_r->p[1].V);
+        Vect_rot(&triangle->p[2].V, pivot, quaternion, &triangle_r->p[2].V);
         return triangle_r;
     }
 }
@@ -306,14 +305,14 @@ Vect *Vect_shearing(Vect *vect, float sh_xy, float sh_xz, float sh_yx, float sh_
 
 Triangle *Triangle_shearing(Triangle * triangle, float sh_xy, float sh_xz, float sh_yx, float sh_yz, float sh_zx, float sh_zy, Triangle *triangle_r){
     if(triangle_r == NULL){
-        Vect_shearing(&triangle->p[0], sh_xy, sh_xz, sh_yx, sh_yz, sh_zx, sh_zy, NULL);
-        Vect_shearing(&triangle->p[1], sh_xy, sh_xz, sh_yx, sh_yz, sh_zx, sh_zy, NULL);
-        Vect_shearing(&triangle->p[2], sh_xy, sh_xz, sh_yx, sh_yz, sh_zx, sh_zy, NULL);
+        Vect_shearing(&triangle->p[0].V, sh_xy, sh_xz, sh_yx, sh_yz, sh_zx, sh_zy, NULL);
+        Vect_shearing(&triangle->p[1].V, sh_xy, sh_xz, sh_yx, sh_yz, sh_zx, sh_zy, NULL);
+        Vect_shearing(&triangle->p[2].V, sh_xy, sh_xz, sh_yx, sh_yz, sh_zx, sh_zy, NULL);
         return triangle;
     }else{
-        Vect_shearing(&triangle->p[0], sh_xy, sh_xz, sh_yx, sh_yz, sh_zx, sh_zy, &triangle_r->p[0]);
-        Vect_shearing(&triangle->p[1], sh_xy, sh_xz, sh_yx, sh_yz, sh_zx, sh_zy, &triangle_r->p[0]);
-        Vect_shearing(&triangle->p[2], sh_xy, sh_xz, sh_yx, sh_yz, sh_zx, sh_zy, &triangle_r->p[0]);
+        Vect_shearing(&triangle->p[0].V, sh_xy, sh_xz, sh_yx, sh_yz, sh_zx, sh_zy, &triangle_r->p[0].V);
+        Vect_shearing(&triangle->p[1].V, sh_xy, sh_xz, sh_yx, sh_yz, sh_zx, sh_zy, &triangle_r->p[0].V);
+        Vect_shearing(&triangle->p[2].V, sh_xy, sh_xz, sh_yx, sh_yz, sh_zx, sh_zy, &triangle_r->p[0].V);
     return triangle_r;
     }
 }

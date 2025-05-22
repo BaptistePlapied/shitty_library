@@ -1,6 +1,4 @@
 #include "the_header_file.h"
-#include <math.h>
-#include <stdio.h>
 
 // TODO: make all the matrix/vect operation possible/needed
 // TODO: optimze them as much as possible in my range of skills

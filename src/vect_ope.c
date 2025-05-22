@@ -336,59 +336,39 @@ Vect *Vect_shift_dim(Vect *vect, int shift, Vect *vect_r){
 }
 
 
-// TODO: make it so that the dim don't change
 Vect *Vect_shift(Vect *vect, int shift, Vect *vect_r){
     if ( shift >= 0){
-        if (shift >= DIM_VEC){
-            fprintf(stderr,"Error : in Vect_shift : trying to shift by" 
-                    " %d but vect->dim is only = %zu "
-                    "will return a vect bigger than the limit DIM_VEC = %d\n"
-                    , shift, vect->dim, DIM_VEC);
-            exit(0);
-            return NULL;
-        }
         if (vect_r == NULL){
             size_t dim_init = vect->dim;
-            size_t dim = dim_init +  (size_t)shift;
-            vect->dim = (dim > DIM_VEC) ? DIM_VEC : dim;
             Vect temp_v;
             Vect_init(&temp_v, vect->dim, NULL);
-            for (size_t i = 0; i < dim_init; i++){
+            for (size_t i = 0; i+shift < dim_init; i++){
                 temp_v.v[i+shift] = vect->v[i];
             }
             Vect_copy(&temp_v, vect);
             return vect;
         }else{
             size_t dim_init = vect->dim;
-            size_t dim = dim_init +  (size_t)shift;
-            vect_r->dim = (dim > DIM_VEC) ? DIM_VEC : dim;
-            for (size_t i = 0; i < dim_init; i++){
+            vect_r->dim = dim_init;
+            for (size_t i = 0; i+shift < dim_init; i++){
                 vect_r->v[i+shift] = vect->v[i];
             }
             return vect_r;
         }
     }else{
-        if(vect->dim <= (size_t)(-shift)){
-            fprintf(stderr,"Error: in Vect_shift : trying to shift by" 
-                    " %d but vect->dim is only = %zu will return a vect of dim < 0\n"
-                    ,shift,vect->dim);
-            exit(0);
-            return NULL;
-        }
         if(vect_r == NULL){
-            size_t dim = vect->dim + shift;
+            size_t dim = vect->dim;
             Vect temp_v;
             Vect_init(&temp_v, dim, NULL);
-            for(size_t i = 0; i < dim; i++){
+            for(size_t i = 0; i-shift < dim; i++){
                 temp_v.v[i] = vect->v[i-shift];
             }
-            vect->dim = dim;
             Vect_copy(&temp_v, vect);
             return vect;
         }else{
-            size_t dim = vect->dim + shift;
+            size_t dim = vect->dim;
             vect_r->dim = dim;
-            for(size_t i = 0; i < dim; i++){
+            for(size_t i = 0; i-shift < dim; i++){
                 vect_r->v[i] = vect->v[i-shift];
             }
             return vect_r;

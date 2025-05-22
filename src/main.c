@@ -1,6 +1,4 @@
 #include "the_header_file.h"
-#include <SDL2/SDL.h>
-#include <stdio.h>
 
 int main() {
     
@@ -14,16 +12,19 @@ int main() {
 
     float v1_f[] ={1,2,13,0};
     float v2_f[] ={1,2,3,4};
-    float v3_f[] ={5,6,7,8,5};
+    float v3_f[] ={5,6,7};
 
     Vect_init(&v1, 4, v1_f);
     Vect_init(&v2, 4, v2_f);
-    Vect_init(&v3, 5, v3_f);
+    Vect_init(&v3, 3, v3_f);
 
     Vect_shift_dim(&v1, 1, &v1_r);
     Vect_shift_dim(&v2, 1, &v2_r);
-    Vect_shift_dim(&v3, -4, &v3_r);
+    Vect_shift(&v3, 0, &v3_r);
     
+    v3_r.dim++;
+
+
     v1_r.dim = 4;
     printf("dim v1_r = %zu\t dim v2 = %zu\n",v1_r.dim,v2.dim);
     Mtx m1;

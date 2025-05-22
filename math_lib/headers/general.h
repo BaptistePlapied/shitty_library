@@ -30,7 +30,7 @@ typedef struct {
 vector *v_init(uint64_t m);
 vector *v_init_0(uint64_t m);
 vector *v_init_l(uint64_t m, complex *c);
-vector *v_reshape(vector *a, uint64_t m);
+vector *v_resize(vector *a, uint64_t m);
 vector *v_copy(vector *a);
 void v_free(vector *a);
 void v_printf(vector *a);

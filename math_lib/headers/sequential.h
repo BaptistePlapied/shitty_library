@@ -5,17 +5,19 @@
 
 // OPERATION
 // complex
-complex c_add(complex a, complex b);
-complex c_sub(complex a, complex b);
-complex c_mult(complex a, complex b);
-complex c_scale(complex a, double b);
+inline complex c_add(complex a, complex b);
+inline complex c_sub(complex a, complex b);
+inline complex c_mult(complex a, complex b);
+inline complex c_scale(complex a, double b);
 complex c_div(complex a, complex b);
 complex c_exp(complex a);
 complex c_log(complex a);
-complex c_conj(complex a);
+inline complex c_conj(complex a);
 uint8_t c_equal(complex a, complex b);
-double c_norm(complex a);
-double c_norm2(complex a);
+uint8_t c_compare(complex a, complex b); // the norm2
+inline double c_norm(complex a);
+inline double c_norm2(complex a);
+inline double c_arg(complex a);
 
 // vector
 vector *v_add(vector *a, vector *b, vector *result);

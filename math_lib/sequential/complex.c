@@ -6,6 +6,17 @@
 
 /*
  *
+ * SPINAL FUNCTION
+ *
+ */
+
+void c_printf(complex c) {
+    printf("(%+.3f %+0.3fi)", c.Re, c.Im); // decimal
+    // printf("(%.3f %+0.3fi)", c.Re, c.Im); // decimal
+}
+
+/*
+ *
  * SWAP STRUCT
  *
  */
@@ -23,16 +34,6 @@ tensor *complex_to_tensor(complex *data, uint64_t *shape, uint64_t ndim);
  *
  */
 
-inline complex c_add(complex a, complex b) { return (complex){a.Re + b.Re, a.Im + b.Im}; }
-
-inline complex c_sub(complex a, complex b) { return (complex){a.Re - b.Re, a.Im - b.Im}; }
-
-inline complex c_mult(complex a, complex b) {
-    return (complex){a.Re * b.Re - a.Im * b.Im, a.Re * b.Im + a.Im * b.Re};
-}
-
-inline complex c_scale(complex a, double b) { return (complex){a.Re * b, a.Im * b}; }
-
 complex c_div(complex a, complex b) {
     double denominator = b.Re * b.Re + b.Im * b.Im;
     if (denominator == 0.0) {
@@ -42,11 +43,6 @@ complex c_div(complex a, complex b) {
     return (complex){(a.Re * b.Re + a.Im * b.Im) / denominator,
                      (a.Im * b.Re - a.Re * b.Im) / denominator};
 }
-inline complex c_conj(complex a) { return (complex){a.Re, -a.Im}; }
-
-inline double c_norm2(complex a) { return a.Re * a.Re + a.Im * a.Im; }
-inline double c_norm(complex a) { return sqrt(c_norm2(a)); }
-inline double c_arg(complex a) { return atan2(a.Re, a.Im); }
 
 complex c_exp(complex a) {
     double exp_re = exp(a.Re);
@@ -58,6 +54,7 @@ complex c_log(complex a) {
     return (complex){log(modulus), angle};
 }
 uint8_t c_equal(complex a, complex b) { return (a.Re == b.Re && a.Im == b.Im) ? 1 : 0; }
+
 // Return: 0 = a < b, 1 = a == b, 2 = a > b
 uint8_t c_compare(complex a, complex b) {
     double mag_a = c_norm2(a);

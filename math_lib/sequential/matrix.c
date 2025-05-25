@@ -90,6 +90,28 @@ matrix *m_reshape(matrix *A, uint64_t m, uint64_t n) {
     }
 }
 
+matrix *m_resize(matrix *A, uint64_t m, uint64_t n) {
+    if (!A) {
+        fprintf(stderr, "ERROR: Input matrix array is NULL\n");
+        return NULL;
+    }
+    matrix *copy_A = m_init(m, n);
+    if (!copy_A) {
+        fprintf(stderr, "ERROR: Failed to allocate resized matrix\n");
+        return NULL;
+    }
+    for (uint64_t i = 0; i < m; i++) {
+        for (uint64_t j = 0; j < n; j++) {
+            if (i < A->m && j < A->n) {
+                copy_A->data[i * n + j] = A->data[i * A->n + j];
+            } else {
+                copy_A->data[i * n + j] = (complex){0.0, 0.0};
+            }
+        }
+    }
+    return copy_A;
+}
+
 matrix *m_copy(matrix *A) {
     if (!A) {
         fprintf(stderr, "ERROR: Input matrix array is NULL\n");
@@ -108,8 +130,7 @@ void m_printf(matrix *A) {
         printf("[ ");
         for (uint64_t j = 0; j < A->n; j++) {
             complex z = A->data[i * A->n + j];
-            printf("(%g %+gi)", z.Re, z.Im); // compact
-            // printf("(%.3f %+0.3fi)", z.Re, z.Im); // decimal
+            c_printf(z);
             if (j < A->n - 1)
                 printf(", ");
         }
@@ -369,4 +390,36 @@ double m_norm(matrix *A) {
         return -1.0;
     }
     return sqrt(m_norm2(A));
+}
+
+matrix *m_mult(matrix *A, matrix *B, matrix *Result) {
+    if (!A || !B) {
+        fprintf(stderr, "ERROR: Input matrix is NULL\n");
+        return NULL;
+    }
+    if (A->n != B->m) {
+        fprintf(stderr, "ERROR: Matrix dimensions are incompatible for multiplication\n");
+        return NULL;
+    }
+    if (Result) {
+        if (Result->m != A->m || Result->n != B->n) {
+            fprintf(stderr, "ERROR: Result matrix has incompatible dimensions\n");
+            return NULL;
+        }
+    } else {
+        Result = m_init(A->m, B->n);
+        if (!Result)
+            return NULL;
+    }
+    for (uint64_t i = 0; i < A->m; i++) {
+        for (uint64_t j = 0; j < B->n; j++) {
+            Result->data[i * B->n + j] = (complex){0.0, 0.0};
+            for (uint64_t k = 0; k < A->n; k++) {
+                Result->data[i * B->n + j] =
+                    c_add(Result->data[i * B->n + j],
+                          c_mult(A->data[i * A->n + k], B->data[k * B->n + j]));
+            }
+        }
+    }
+    return Result;
 }

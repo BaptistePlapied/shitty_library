@@ -1,4 +1,3 @@
-#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,44 +12,8 @@
  *
  */
 
-vector *v_init(uint64_t m){
-    vector *a = (vector*)malloc(sizeof(vector));
-    if (!a) {
-        fprintf(stderr, "ERROR: Failed to allocate vector struct\n");
-        return NULL;
-    }
-    a->m = m;
-    a->data = (complex*)malloc(sizeof(complex)*m);
-    if (!a->data){
-        fprintf(stderr, "ERROR: Failed to allocate vector data\n");
-        free(a);
-        return NULL;
-    }
-    return a;
-}
-
-vector *v_init_0(uint64_t m){
-    vector *a = (vector*)malloc(sizeof(vector));
-    if (!a) {
-        fprintf(stderr, "ERROR: Failed to allocate vector struct\n");
-        return NULL;
-    }
-    a->m = m;
-    a->data = (complex*)calloc(m,sizeof(complex));
-    if (!a->data){
-        fprintf(stderr, "ERROR: Failed to allocate vector data\n");
-        free(a);
-        return NULL;
-    }
-    return a;
-}
-
-vector *v_init_l(uint64_t m, complex *c){
-    if (!c) {
-        fprintf(stderr, "ERROR: Input complex array is NULL\n");
-        return NULL;
-    }
-    vector *a = (vector*)malloc(sizeof(vector));
+vector *v_init(uint64_t m) {
+    vector *a = (vector *)malloc(sizeof(vector));
     if (!a) {
         fprintf(stderr, "ERROR: Failed to allocate vector struct\n");
         return NULL;
@@ -58,7 +21,44 @@ vector *v_init_l(uint64_t m, complex *c){
     a->m = m;
     a->data = (complex *)malloc(sizeof(complex) * m);
     if (!a->data) {
-        fprintf(stderr, "ERROR: Failed to allocate vector data\n"); // Not "complex array                                                            // does not exist"
+        fprintf(stderr, "ERROR: Failed to allocate vector data\n");
+        free(a);
+        return NULL;
+    }
+    return a;
+}
+
+vector *v_init_0(uint64_t m) {
+    vector *a = (vector *)malloc(sizeof(vector));
+    if (!a) {
+        fprintf(stderr, "ERROR: Failed to allocate vector struct\n");
+        return NULL;
+    }
+    a->m = m;
+    a->data = (complex *)calloc(m, sizeof(complex));
+    if (!a->data) {
+        fprintf(stderr, "ERROR: Failed to allocate vector data\n");
+        free(a);
+        return NULL;
+    }
+    return a;
+}
+
+vector *v_init_l(uint64_t m, complex *c) {
+    if (!c) {
+        fprintf(stderr, "ERROR: Input complex array is NULL\n");
+        return NULL;
+    }
+    vector *a = (vector *)malloc(sizeof(vector));
+    if (!a) {
+        fprintf(stderr, "ERROR: Failed to allocate vector struct\n");
+        return NULL;
+    }
+    a->m = m;
+    a->data = (complex *)malloc(sizeof(complex) * m);
+    if (!a->data) {
+        fprintf(stderr, "ERROR: Failed to allocate vector data\n"); // Not "complex array
+                                                                    // // does not exist"
         free(a);
         return NULL;
     }
@@ -66,13 +66,13 @@ vector *v_init_l(uint64_t m, complex *c){
     return a;
 }
 
-void v_free(vector *a){
-    if (a){
+void v_free(vector *a) {
+    if (a) {
         free(a->data);
         free(a);
     }
 }
-vector *v_copy(vector *a){
+vector *v_copy(vector *a) {
     if (!a) {
         fprintf(stderr, "ERROR: Input vector is NULL\n");
         return NULL;
@@ -85,7 +85,7 @@ vector *v_resize(vector *a, uint64_t new_m) {
         fprintf(stderr, "ERROR: Input vector is NULL\n");
         return NULL;
     }
-    complex *new_data = (complex*)realloc(a->data, sizeof(complex) * new_m);
+    complex *new_data = (complex *)realloc(a->data, sizeof(complex) * new_m);
     if (!new_data) {
         fprintf(stderr, "ERROR: Failed to allocate memory during vector resize\n");
         return NULL;
@@ -100,7 +100,7 @@ vector *v_resize(vector *a, uint64_t new_m) {
     return a;
 }
 
-void v_printf(vector *a){
+void v_printf(vector *a) {
     if (!a) {
         fprintf(stderr, "ERROR: Input vector is NULL\n");
         return;
@@ -108,8 +108,7 @@ void v_printf(vector *a){
     printf("[ ");
     for (uint64_t i = 0; i < a->m; i++) {
         complex z = a->data[i];
-        printf("(%g %+gi)", z.Re, z.Im); // compact
-        // printf("(%.3f %+0.3fi)", z.Re, z.Im); // decimal
+        c_printf(z);
         if (i < a->m - 1)
             printf(", ");
     }
@@ -131,12 +130,12 @@ tensor *vector_to_tensor(vector *a);
  *
  */
 
-vector *v_add(vector *a, vector *b, vector *result){
+vector *v_add(vector *a, vector *b, vector *result) {
     if (!a || !b) {
         fprintf(stderr, "ERROR: Input vector is NULL\n");
         return NULL;
     }
-    if(a->m != b->m){
+    if (a->m != b->m) {
         fprintf(stderr, "ERROR: Vectors dimensions are incompatible for addition\n");
         return NULL;
     }
@@ -150,18 +149,18 @@ vector *v_add(vector *a, vector *b, vector *result){
         if (!result)
             return NULL;
     }
-    for(uint64_t i = 0; i < a->m; i++){
-        result->data[i] = c_add(a->data[i], b->data[i]); 
+    for (uint64_t i = 0; i < a->m; i++) {
+        result->data[i] = c_add(a->data[i], b->data[i]);
     }
     return result;
 }
 
-vector *v_sub(vector *a, vector *b, vector *result){
+vector *v_sub(vector *a, vector *b, vector *result) {
     if (!a || !b) {
         fprintf(stderr, "ERROR: Input vector is NULL\n");
         return NULL;
     }
-    if(a->m != b->m){
+    if (a->m != b->m) {
         fprintf(stderr, "ERROR: Vectors dimensions are incompatible for substraction\n");
         return NULL;
     }
@@ -175,19 +174,20 @@ vector *v_sub(vector *a, vector *b, vector *result){
         if (!result)
             return NULL;
     }
-    for(uint64_t i = 0; i < a->m; i++){
-        result->data[i] = c_sub(a->data[i], b->data[i]); 
+    for (uint64_t i = 0; i < a->m; i++) {
+        result->data[i] = c_sub(a->data[i], b->data[i]);
     }
     return result;
 }
 
-vector *v_mult_e(vector *a, vector *b, vector *result){
+vector *v_mult_e(vector *a, vector *b, vector *result) {
     if (!a || !b) {
         fprintf(stderr, "ERROR: Input vector is NULL\n");
         return NULL;
     }
-    if(a->m != b->m){
-        fprintf(stderr, "ERROR: Vectors dimensions are incompatible for multiplication_E\n");
+    if (a->m != b->m) {
+        fprintf(stderr,
+                "ERROR: Vectors dimensions are incompatible for multiplication_E\n");
         return NULL;
     }
     if (result) {
@@ -200,18 +200,18 @@ vector *v_mult_e(vector *a, vector *b, vector *result){
         if (!result)
             return NULL;
     }
-    for(uint64_t i = 0; i < a->m; i++){
-        result->data[i] = c_mult(a->data[i], b->data[i]); 
+    for (uint64_t i = 0; i < a->m; i++) {
+        result->data[i] = c_mult(a->data[i], b->data[i]);
     }
     return result;
 }
 
-vector *v_div_e(vector *a, vector *b, vector *result){
+vector *v_div_e(vector *a, vector *b, vector *result) {
     if (!a || !b) {
         fprintf(stderr, "ERROR: Input vector is NULL\n");
         return NULL;
     }
-    if(a->m != b->m){
+    if (a->m != b->m) {
         fprintf(stderr, "ERROR: Vectors dimensions are incompatible for division_E\n");
         return NULL;
     }
@@ -225,13 +225,13 @@ vector *v_div_e(vector *a, vector *b, vector *result){
         if (!result)
             return NULL;
     }
-    for(uint64_t i = 0; i < a->m; i++){
-        result->data[i] = c_div(a->data[i], b->data[i]); 
+    for (uint64_t i = 0; i < a->m; i++) {
+        result->data[i] = c_div(a->data[i], b->data[i]);
     }
     return result;
 }
 
-vector *v_scale(vector *a, complex alpha, vector *result){
+vector *v_scale(vector *a, complex alpha, vector *result) {
     if (!a) {
         fprintf(stderr, "ERROR: Input vector is NULL\n");
         return NULL;
@@ -246,13 +246,13 @@ vector *v_scale(vector *a, complex alpha, vector *result){
         if (!result)
             return NULL;
     }
-    for(uint64_t i = 0; i < a->m; i++){
-        result->data[i] = c_mult(a->data[i], alpha); 
+    for (uint64_t i = 0; i < a->m; i++) {
+        result->data[i] = c_mult(a->data[i], alpha);
     }
     return result;
 }
 
-vector *v_scale_r(vector *a, double alpha, vector *result){
+vector *v_scale_r(vector *a, double alpha, vector *result) {
     if (!a) {
         fprintf(stderr, "ERROR: Input vector is NULL\n");
         return NULL;
@@ -267,13 +267,13 @@ vector *v_scale_r(vector *a, double alpha, vector *result){
         if (!result)
             return NULL;
     }
-    for(uint64_t i = 0; i < a->m; i++){
-        result->data[i] = c_scale(a->data[i], alpha); 
+    for (uint64_t i = 0; i < a->m; i++) {
+        result->data[i] = c_scale(a->data[i], alpha);
     }
     return result;
 }
 
-vector *v_conj(vector *a, vector *result){
+vector *v_conj(vector *a, vector *result) {
     if (!a) {
         fprintf(stderr, "ERROR: Input vector is NULL\n");
         return NULL;
@@ -288,13 +288,13 @@ vector *v_conj(vector *a, vector *result){
         if (!result)
             return NULL;
     }
-    for(uint64_t i = 0; i < a->m; i++){
-        result->data[i] = c_conj(a->data[i]); 
+    for (uint64_t i = 0; i < a->m; i++) {
+        result->data[i] = c_conj(a->data[i]);
     }
     return result;
 }
 
-vector *v_Re(vector *a, vector *result){
+vector *v_Re(vector *a, vector *result) {
     if (!a) {
         fprintf(stderr, "ERROR: Input vector is NULL\n");
         return NULL;
@@ -309,13 +309,13 @@ vector *v_Re(vector *a, vector *result){
         if (!result)
             return NULL;
     }
-    for(uint64_t i = 0; i < a->m; i++){
-        result->data[i] = (complex){a->data[i].Re,0.0}; 
+    for (uint64_t i = 0; i < a->m; i++) {
+        result->data[i] = (complex){a->data[i].Re, 0.0};
     }
     return result;
 }
 
-vector *v_Im(vector *a, vector *result){
+vector *v_Im(vector *a, vector *result) {
     if (!a) {
         fprintf(stderr, "ERROR: Input vector is NULL\n");
         return NULL;
@@ -330,14 +330,80 @@ vector *v_Im(vector *a, vector *result){
         if (!result)
             return NULL;
     }
-    for(uint64_t i = 0; i < a->m; i++){
-        result->data[i] = (complex){0.0,a->data[i].Im}; 
+    for (uint64_t i = 0; i < a->m; i++) {
+        result->data[i] = (complex){0.0, a->data[i].Im};
     }
     return result;
 }
 
-vector *v_map(vector *a, complex (*f)(complex), vector *result);
-uint8_t *v_equal(vector *a, vector *b, vector *result);
-double v_dot_prod(vector *a, vector *b);
-double v_norm(vector *a, vector *b);
-double v_norm2(vector *a, vector *b);
+vector *v_map(vector *a, complex (*f)(complex), vector *result) {
+    if (!a) {
+        fprintf(stderr, "ERROR: Input vector is NULL\n");
+        return NULL;
+    }
+    if (result) {
+        if (result->m != a->m) {
+            fprintf(stderr, "ERROR: Result vector has incompatible dimension\n");
+            return NULL;
+        }
+    } else {
+        result = v_init(a->m);
+        if (!result)
+            return NULL;
+    }
+    for (uint64_t i = 0; i < a->m; i++) {
+        result->data[i] = f(a->data[i]);
+    }
+    return result;
+}
+
+uint8_t v_equal(vector *a, vector *b, vector *result) {
+    if (!a || !b) {
+        fprintf(stderr, "ERROR: Input vector is NULL\n");
+        return 255;
+    }
+    if (a->m != b->m) {
+        fprintf(stderr, "ERROR: Vectors dimensions are incompatible for equality\n");
+        return 255;
+    }
+    for (uint64_t i = 0; i < a->m; i++) {
+        if (c_equal(a->data[i], b->data[i]) != 1) {
+            return 0;
+        }
+    }
+    return 1;
+}
+complex v_dot_prod(vector *a, vector *b) {
+    if (!a || !b) {
+        fprintf(stderr, "ERROR: Input vector is NULL\n");
+        return (complex){-1, -1};
+    }
+    if (a->m != b->m) {
+        fprintf(stderr, "ERROR: Vectors dimensions are incompatible for equality\n");
+        return (complex){-1, -1};
+    }
+    complex result = {0, 0};
+    for (uint64_t i = 0; i < a->m; i++) {
+        result = c_add(c_mult(a->data[i], b->data[i]), result);
+    }
+    return result;
+}
+
+double v_norm(vector *a) {
+    if (!a) {
+        fprintf(stderr, "ERROR: Input vector is NULL\n");
+        return -1;
+    }
+    return v_norm2(a);
+}
+double v_norm2(vector *a) {
+    if (!a) {
+        fprintf(stderr, "ERROR: Input vector is NULL\n");
+        return -1;
+    }
+    double result = 0;
+    for (uint64_t i = 0; i < a->m; i++) {
+        result += c_norm2(a->data[i]);
+    }
+    return result;
+}

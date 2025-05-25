@@ -24,7 +24,9 @@ typedef struct {
 } tensor;
 
 // SPINAL FUNCTION
+
 // complex
+void c_printf(complex c);
 
 // vector
 vector *v_init(uint64_t m);
@@ -40,6 +42,7 @@ matrix *m_init(uint64_t m, uint64_t n);
 matrix *m_init_0(uint64_t m, uint64_t n);
 matrix *m_init_l(uint64_t m, uint64_t n, complex *c);
 matrix *m_reshape(matrix *A, uint64_t m, uint64_t n);
+matrix *m_resize(matrix *A, uint64_t m, uint64_t n);
 matrix *m_copy(matrix *A);
 void m_free(matrix *A);
 void m_printf(matrix *A);

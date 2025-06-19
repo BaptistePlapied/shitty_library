@@ -394,7 +394,7 @@ double v_norm(vector *a) {
         fprintf(stderr, "ERROR: Input vector is NULL\n");
         return -1;
     }
-    return v_norm2(a);
+    return sqrt(v_norm2(a));
 }
 double v_norm2(vector *a) {
     if (!a) {

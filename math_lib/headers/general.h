@@ -44,6 +44,8 @@ matrix *m_init_l(uint64_t m, uint64_t n, complex *c);
 matrix *m_reshape(matrix *A, uint64_t m, uint64_t n);
 matrix *m_resize(matrix *A, uint64_t m, uint64_t n);
 matrix *m_copy(matrix *A);
+matrix *m_copy_on(matrix *A, matrix *Result);
+void m_swap_rows(matrix *M, uint64_t row1, uint64_t row2);
 void m_free(matrix *A);
 void m_printf(matrix *A);
 

@@ -11,5 +11,6 @@ void rand_v_data_gen(vector *a, double range);
 
 // matrix.c
 void rand_m_data_gen(matrix *A, double range);
+void rand_m_data_Re_gen(matrix *A, double range);
 
 // tensor.c

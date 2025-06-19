@@ -63,7 +63,56 @@ void test_m_echelon() {
     printf(" result : \n\t\t");
     v_printf(d);
 }
+
+void test_m_LU() {
+    uint64_t dim_m = rand_dim_gen(10);
+    // uint64_t dim_n = rand_dim_gen(15);
+    matrix *A = m_init(dim_m, dim_m);
+    rand_m_data_gen(A, 100);
+    printf("A : \n");
+    m_printf(A);
+    matrix *U = m_init(dim_m, dim_m);
+    matrix *L = m_init(dim_m, dim_m);
+    matrix *P = m_init(dim_m, dim_m);
+    lu_pp(A, L, U, P, NULL);
+    printf("L : \n");
+    m_printf(L);
+    printf("U : \n");
+    m_printf(U);
+    printf("P : \n");
+    m_printf(P);
+
+    matrix *PA = m_init(dim_m, dim_m);
+    matrix *LU = m_init(dim_m, dim_m);
+    m_mult(P, A, PA);
+    m_mult(L, U, LU);
+
+    printf("PA : \n");
+    m_printf(PA);
+    printf("LU : \n");
+    m_printf(LU);
+}
+
+void test_m_QR() {
+    uint64_t dim_m = rand_dim_gen(5);
+    // uint64_t dim_n = rand_dim_gen(15);
+    matrix *A = m_init(dim_m, dim_m);
+    rand_m_data_Re_gen(A, 10);
+    printf("A : \n");
+    m_printf(A);
+    matrix *Q = m_init(dim_m, dim_m);
+    matrix *R = m_init(dim_m, dim_m);
+    m_mgs_qr(A, Q, R);
+    printf("Q : \n");
+    m_printf(Q);
+    printf("R : \n");
+    m_printf(R);
+
+    printf("Q * R : \n");
+    m_printf(m_mult(Q, R, 0));
+}
+
 int main() {
     rand_init_seed();
-    test_m_echelon();
+    test_m_QR();
 }

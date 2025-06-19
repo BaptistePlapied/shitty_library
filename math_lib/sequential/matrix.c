@@ -121,6 +121,21 @@ matrix *m_copy(matrix *A) {
     return R;
 }
 
+matrix *m_copy_on(matrix *A, matrix *Result) {
+    if (!A || !Result) {
+        fprintf(stderr, "ERROR: Input matrix array is NULL\n");
+        return NULL;
+    }
+    if (A->m != Result->m || A->n != Result->n) {
+        fprintf(stderr, "ERROR: Matrix dimensions are incompatible\n");
+        return NULL;
+    }
+    for (uint64_t i = 0; i < A->m * A->n; i++) {
+        Result->data[i] = A->data[i];
+    }
+    return Result;
+}
+
 void m_printf(matrix *A) {
     if (!A) {
         fprintf(stderr, "ERROR: Input matrix array is NULL\n");
@@ -135,6 +150,20 @@ void m_printf(matrix *A) {
                 printf(", ");
         }
         printf(" ]\n");
+    }
+}
+
+void m_swap_rows(matrix *M, uint64_t row1, uint64_t row2) {
+    if (!M || row1 >= M->m || row2 >= M->m) {
+        fprintf(stderr, "ERROR: Invalid matrix or row indices in m_swap_rows\n");
+        return;
+    }
+    if (row1 == row2)
+        return; // Nothing to do
+    for (uint64_t j = 0; j < M->n; j++) {
+        complex temp = M->data[row1 * M->n + j];
+        M->data[row1 * M->n + j] = M->data[row2 * M->n + j];
+        M->data[row2 * M->n + j] = temp;
     }
 }
 
@@ -419,6 +448,33 @@ matrix *m_mult(matrix *A, matrix *B, matrix *Result) {
                     c_add(Result->data[i * B->n + j],
                           c_mult(A->data[i * A->n + k], B->data[k * B->n + j]));
             }
+        }
+    }
+    return Result;
+}
+
+matrix *v_outer(vector *a, vector *b, matrix *Result) {
+    if (!a || !b) {
+        fprintf(stderr, "ERROR: Input vectors are NULL\n");
+        return NULL;
+    }
+    if (a->m != b->m) {
+        fprintf(stderr, "ERROR: Vectors dimensions are incompatible\n");
+        return NULL;
+    }
+    if (Result) {
+        if (Result->m != a->m || Result->n != a->m) {
+            fprintf(stderr, "ERROR: Result vector has incompatible dimension\n");
+            return NULL;
+        }
+    } else {
+        Result = m_init(a->m, a->m);
+        if (!Result)
+            return NULL;
+    }
+    for (uint64_t i = 0; i < a->m; i++) {
+        for (uint64_t j = 0; j < a->m; j++) {
+            Result->data[i * Result->n + j] = c_mult(a->data[j], b->data[i]);
         }
     }
     return Result;

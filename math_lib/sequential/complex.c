@@ -44,6 +44,11 @@ complex c_div(complex a, complex b) {
                      (a.Im * b.Re - a.Re * b.Im) / denominator};
 }
 
+complex c_sqrt(complex z) {
+    double r = sqrt(c_norm(z));
+    double theta = c_arg(z) / 2;
+    return (complex){r * cos(theta), r * sin(theta)};
+}
 complex c_exp(complex a) {
     double exp_re = exp(a.Re);
     return (complex){exp_re * cos(a.Im), exp_re * sin(a.Im)};

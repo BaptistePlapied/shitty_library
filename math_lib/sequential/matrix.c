@@ -474,7 +474,7 @@ matrix *v_outer(vector *a, vector *b, matrix *Result) {
     }
     for (uint64_t i = 0; i < a->m; i++) {
         for (uint64_t j = 0; j < a->m; j++) {
-            Result->data[i * Result->n + j] = c_mult(a->data[j], b->data[i]);
+            Result->data[i * Result->n + j] = c_mult(a->data[i], c_conj(b->data[j]));
         }
     }
     return Result;

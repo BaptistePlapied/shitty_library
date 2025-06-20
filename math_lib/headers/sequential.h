@@ -98,6 +98,9 @@ void lu_pp(matrix *A, matrix *L, matrix *U, matrix *P, uint64_t *swap);
 complex m_tr_det(matrix *A);
 complex m_det(matrix *A);
 void m_mgs_qr(matrix *A, matrix *Q, matrix *R);
+vector *v_householder(vector *a, vector *result);
+void m_hessen_reduc(matrix *A, matrix *A_res, matrix *Q_tot);
+vector *qr_eigenvalues(matrix *A, double tol, int max_iter, vector *result);
 
 // TRACKER
 
@@ -123,7 +126,7 @@ static TrackedGroup groups[MAX_TRACKED_GROUPS];
 
 void track_group_init();
 void *track_generic_group_in(void *ptr, uint64_t group_id, TrackType type);
-void *track_generic_group_get(uint64_t group_id, uint64_t index);
+void *track_generic_group_get(uint64_t group_id, uint64_t index, TrackType expected_type);
 void track_generic_group_replace(uint64_t group_id, uint64_t index, void *ptr,
                                  TrackType type);
 void track_group_clear(uint64_t group_id);
@@ -131,6 +134,8 @@ uint64_t track_group_count(uint64_t group_id);
 uint64_t find_empty_group_id();
 
 void *track_generic(void *ptr, TrackType type);
+void *track_generic_get(uint64_t index, TrackType expected_type);
+uint64_t track_count();
 void track_clear_all();
 
 // put in a group
@@ -142,9 +147,12 @@ void track_clear_all();
     (tensor *)track_generic_group_in((void *)(T), (group_id), TRACK_TENSOR)
 
 // get
-#define m_track_get(group_id, index) (matrix *)track_generic_group_get((group_id), index)
-#define v_track_get(group_id, index) (vector *)track_generic_group_get((group_id), index)
-#define t_track_get(group_id, index) (tensor *)track_generic_group_get((group_id), index)
+#define m_track_get_g(group_id, index)                                                   \
+    (matrix *)track_generic_group_get((group_id), (index), TRACK_MATRIX)
+#define v_track_get_g(group_id, index)                                                   \
+    (vector *)track_generic_group_get((group_id), (index), TRACK_VECTOR)
+#define t_track_get_g(group_id, index)                                                   \
+    (tensor *)track_generic_group_get((group_id), (index), TRACK_TENSOR)
 
 // replace
 #define m_track_replace(group_id, index, A)                                              \
@@ -159,5 +167,9 @@ void track_clear_all();
 #define m_track(A) (matrix *)track_generic((void *)(A), TRACK_MATRIX)
 #define v_track(a) (vector *)track_generic((void *)(a), TRACK_VECTOR)
 #define t_track(T) (tensor *)track_generic((void *)(T), TRACK_TENSOR)
+
+#define m_track_get(index) (matrix *)track_generic_get((index), TRACK_MATRIX)
+#define v_track_get(index) (vector *)track_generic_get((index), TRACK_VECTOR)
+#define t_track_get(index) (tensor *)track_generic_get((index), TRACK_TENSOR)
 
 #endif // !SEQUENTIAL_H_

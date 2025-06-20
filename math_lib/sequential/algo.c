@@ -289,6 +289,7 @@ void m_mgs_qr(matrix *A, matrix *Q, matrix *R) {
         fprintf(stderr, "ERROR: R matrix must be square with size A->n\n");
         return;
     }
+    uint64_t gid = find_empty_group_id();
 
     uint64_t m = A->m;
     uint64_t n = A->n;
@@ -308,7 +309,7 @@ void m_mgs_qr(matrix *A, matrix *Q, matrix *R) {
             // R[i][j] = <q_i, v_j>
             R->data[i * n + j] = v_dot_prod(qi, vj);
             // vj -= R[i][j] * q_i
-            vj = v_sub(vj, v_scale(qi, R->data[i * n + j], NULL), vj);
+            vj = v_sub(vj, v_track_in(v_scale(qi, R->data[i * n + j], NULL), gid), vj);
         }
         // R[j][j] = ||vj||
         complex rjj = c_sqrt(v_dot_prod(vj, vj));
@@ -328,32 +329,39 @@ void m_mgs_qr(matrix *A, matrix *Q, matrix *R) {
     v_free(vj);
     v_free(qi);
     v_free(qj);
+    track_group_clear(gid);
 }
 
 vector *v_householder(vector *a, vector *result) {
-    if (!a) {
-        fprintf(stderr, "ERROR: Input vector is NULL\n");
+    if (!a)
         return NULL;
-    }
     if (result) {
-        if (result->m != a->m) {
-            fprintf(stderr, "ERROR: Result vector has incompatible dimension\n");
+        if (result->m != a->m)
             return NULL;
-        }
     } else {
         result = v_init(a->m);
         if (!result)
             return NULL;
     }
-    vector *e1 = v_init_0(a->m);
-    e1->data[0] = (complex){1.0, 0.0};
     double norm_a = v_norm(a);
-    for (uint64_t i = 0; i < a->m; i++) {
-        result->data[i] = c_add(a->data[i], c_mult(e1->data[i], (complex){norm_a, 0.0}));
+    if (norm_a < 1e-14) {
+        v_free(result);
+        result = v_init_0(a->m);
+        result->data[0] = c_real(1.0);
+        return result;
     }
-    double norm_res = v_norm(result);
+    complex x0 = a->data[0];
+    double sign_real = (x0.Re >= 0) ? 1.0 : -1.0;
+    vector *e1 = v_init_0(a->m);
+    e1->data[0] = (complex){sign_real * norm_a, 0.0};
     for (uint64_t i = 0; i < a->m; i++) {
-        result->data[i] = c_div(result->data[i], (complex){norm_res, 0.0});
+        result->data[i] = c_add(a->data[i], e1->data[i]);
+    }
+    double norm_v = v_norm(result);
+    if (norm_v < 1e-14)
+        norm_v = 1.0;
+    for (uint64_t i = 0; i < a->m; i++) {
+        result->data[i] = c_div(result->data[i], c_real(norm_v));
     }
     v_free(e1);
     return result;
@@ -422,7 +430,6 @@ void m_hessen_reduc(matrix *A, matrix *A_res, matrix *Q_tot) {
                     H_sub->data[i * H_sub->n + j];
             }
         }
-
         // A_res ← H_k A_res H_kᵗ
         matrix *H_k_T = m_track_in(m_transpose(H_k, NULL), group_id);
         matrix *A_temp =
@@ -443,4 +450,54 @@ void m_hessen_reduc(matrix *A, matrix *A_res, matrix *Q_tot) {
     }
 
     track_group_clear(group_id);
+}
+
+vector *qr_eigenvalues(matrix *A, double tol, int max_iter, vector *result) {
+    if (!A || A->m != A->n) {
+        fprintf(stderr, "ERROR : Wrong input for qr_eigenvalues\n");
+        return NULL;
+    }
+    if (result) {
+        if (result->m != A->m) {
+            fprintf(stderr, "ERROR : incompatible dim for result eigen\n");
+            return NULL;
+        }
+    } else {
+        result = v_init(A->m);
+        if (!result)
+            return NULL;
+    }
+    uint64_t n = A->n;
+    matrix *H = m_init(n, n);
+    matrix *Q_tot = m_init(n, n);
+
+    m_hessen_reduc(A, H, Q_tot);
+    matrix *Q = m_init(n, n);
+    matrix *R = m_init(n, n);
+    matrix *RQ = m_init(n, n);
+
+    for (uint64_t iter = 0; iter < max_iter; iter++) {
+        m_mgs_qr(H, Q, R);
+        m_mult(R, Q, RQ);
+        m_copy_on(RQ, H);
+
+        double off_diag_norm = 0.0;
+        for (uint64_t i = 1; i < n; i++) {
+            for (uint64_t j = 0; j < i; j++) {
+                off_diag_norm += c_norm2(H->data[i * n + j]);
+            }
+        }
+        if (sqrt(off_diag_norm) < tol) {
+            break;
+        }
+    }
+    for (uint64_t i = 0; i < n; i++) {
+        result->data[i] = H->data[i * n + i];
+    }
+    m_free(H);
+    m_free(Q_tot);
+    m_free(Q);
+    m_free(R);
+
+    return result;
 }

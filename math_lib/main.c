@@ -112,7 +112,46 @@ void test_m_QR() {
     m_printf(m_mult(Q, R, 0));
 }
 
+void test_eigenvalues() {
+    uint64_t dim_m = rand_dim_gen(5);
+    matrix *A = m_init(dim_m, dim_m);
+    rand_m_data_Int_gen(A, 10);
+    printf("A : \n");
+    m_printf(A);
+    vector *eigenvals = qr_eigenvalues(A, 1e-8, 50, NULL);
+    printf("\n eigenvals :\n\t");
+    v_printf(eigenvals);
+}
+
+void test_hessenberg_reduction() {
+    uint64_t dim_m = rand_dim_gen(5);
+    matrix *A = m_init(dim_m, dim_m);
+    rand_m_data_Int_gen(A, 10);
+    printf("A : \n");
+    m_printf(A);
+    matrix *A_res = m_init(dim_m, dim_m);
+    matrix *Q_tot = m_init(dim_m, dim_m);
+    m_hessen_reduc(A, A_res, Q_tot);
+    printf("A_res :\n");
+    m_printf(A_res);
+    printf("Q_tot :\n");
+    m_printf(Q_tot);
+    matrix *I = m_mult(m_track(m_transpose(Q_tot, NULL)), Q_tot, NULL);
+    printf("I : \n");
+    m_printf(I);
+    uint64_t max_index = track_count();
+    printf("max_index : %llu\n", max_index);
+    matrix *Q_Tot = m_track_get(max_index - 1);
+    matrix *A_rescon = m_mult(Q_Tot, m_track(m_mult(A, Q_tot, NULL)), NULL);
+    printf("A_res reconstitute: \n");
+    m_printf(A_rescon);
+    printf("max_index : %llu\n", track_count());
+    track_clear_all();
+    printf("max_index : %llu\n", track_count());
+}
 int main() {
     rand_init_seed();
     test_m_QR();
+    test_eigenvalues();
+    // test_hessenberg_reduction();
 }

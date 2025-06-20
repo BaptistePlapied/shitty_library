@@ -18,6 +18,23 @@ void *track_generic(void *ptr, TrackType type) {
     return ptr;
 }
 
+uint64_t track_count() { return tracked_count; }
+
+void *track_generic_get(uint64_t index, TrackType expected_type) {
+    if (index >= MAX_TRACKED) {
+        return NULL;
+    }
+    if (tracked[index].type == expected_type) {
+        return tracked[index].ptr;
+    } else {
+        fprintf(
+            stderr,
+            "ERROR: Type mismatch in track_generic_get, (expected : %d but found : %d)\n",
+            expected_type, tracked[index].type);
+        return NULL;
+    }
+}
+
 // -- Clear all globally tracked objects
 void track_clear_all() {
     for (uint64_t i = 0; i < tracked_count; ++i) {
@@ -51,13 +68,21 @@ void *track_generic_group_in(void *ptr, uint64_t group_id, TrackType type) {
 }
 
 // -- Get a pointer to the object at index in group
-void *track_generic_group_get(uint64_t group_id, uint64_t index) {
+void *track_generic_group_get(uint64_t group_id, uint64_t index,
+                              TrackType expected_type) {
     if (group_id >= MAX_TRACKED_GROUPS)
         return NULL;
-
     TrackedGroup *g = &groups[group_id];
     if (index < g->count) {
-        return g->item[index].ptr;
+        if (g->item[index].type == expected_type) {
+            return g->item[index].ptr;
+        } else {
+            fprintf(stderr,
+                    "ERROR: Type mismatch in track_generic_group_get (expected %d, found "
+                    "%d)\n",
+                    expected_type, g->item[index].type);
+            return NULL;
+        }
     }
     return NULL;
 }

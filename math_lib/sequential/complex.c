@@ -64,7 +64,7 @@ uint8_t c_equal(complex a, complex b) { return (a.Re == b.Re && a.Im == b.Im) ? 
 uint8_t c_compare(complex a, complex b) {
     double mag_a = c_norm2(a);
     double mag_b = c_norm2(b);
-    if (fabs(mag_a - mag_b) < 1e-12)
+    if (fabs(mag_a - mag_b) < 1e-8)
         return 1; // Equal (with tolerance)
     return (mag_a > mag_b) ? 2 : 0;
 }

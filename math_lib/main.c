@@ -56,7 +56,7 @@ void test_m_echelon() {
     echelon_expr_printf(echelon);
     vector *b = v_init(dim_m);
     rand_v_data_gen(b, 5);
-    vector *d = backsub(c, b, NULL);
+    vector *d = back_sub(c, b, NULL);
     printf("backsub :\n\t");
     printf(" b : \n\t\t");
     v_printf(b);
@@ -102,23 +102,45 @@ void test_m_QR() {
     m_printf(A);
     matrix *Q = m_init(dim_m, dim_m);
     matrix *R = m_init(dim_m, dim_m);
-    m_mgs_qr(A, Q, R);
+    m_mgs(A, Q, R);
     printf("Q : \n");
     m_printf(Q);
     printf("R : \n");
     m_printf(R);
-
+    printf("I : Q^H * Q\n");
+    m_printf(m_mult(m_hermitian(Q, NULL), Q, NULL));
     printf("Q * R : \n");
     m_printf(m_mult(Q, R, 0));
 }
 
 void test_eigenvalues() {
+    uint64_t dim_m = rand_dim_gen(7);
+    // vector *a = v_init(dim_m);
+    //  rand_v_data_Int_gen(a, 10);
+    //  matrix *A = v_outer(a, a, NULL);
+    matrix *A = m_init(dim_m, dim_m);
+    rand_m_data_gen(A, 10);
+    printf("A : \n");
+    m_printf(A);
+    vector *eigenvals = qr_eigenvalues(A, 1e-4, 100, NULL);
+    printf("\n eigenvals :\n\t");
+    v_printf(eigenvals);
+}
+void test_eigenvectors() {
     uint64_t dim_m = rand_dim_gen(5);
+    // vector *a = v_init(dim_m);
+    //  rand_v_data_Int_gen(a, 10);
+    //  matrix *A = v_outer(a, a, NULL);
     matrix *A = m_init(dim_m, dim_m);
     rand_m_data_Int_gen(A, 10);
     printf("A : \n");
     m_printf(A);
-    vector *eigenvals = qr_eigenvalues(A, 1e-8, 50, NULL);
+    vector **eigenvecs = qr_eigenvectors(A, 1e-4, 100, NULL);
+    printf("\n eigenvecs :\n");
+    for (uint64_t i = 0; i < dim_m; i++) {
+        v_printf(eigenvecs[i]);
+    }
+    vector *eigenvals = qr_eigenvalues(A, 1e-4, 100, NULL);
     printf("\n eigenvals :\n\t");
     v_printf(eigenvals);
 }
@@ -151,7 +173,8 @@ void test_hessenberg_reduction() {
 }
 int main() {
     rand_init_seed();
-    test_m_QR();
+    /* test_m_QR(); */
     test_eigenvalues();
-    // test_hessenberg_reduction();
+    /* test_eigenvectors(); */
+    /* test_hessenberg_reduction(); */
 }

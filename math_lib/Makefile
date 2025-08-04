@@ -14,7 +14,7 @@ LCUNIT = -lcunit
 # Directories
 DIR_SEQUENTIAL = sequential
 DIR_MULTITHREAD = multithread
-DIR_TESTS = tests
+DIR_TESTS = tests/sequential
 DIR_UTILS = utils
 DIR_OBJECT = object_math_lib
 DIR_OBJECT_SEQUENTIAL = $(DIR_OBJECT)/$(DIR_SEQUENTIAL)
@@ -46,10 +46,10 @@ TARGET_MAIN = $(DIR_OBJECT)/main
 
 
 all: $(TARGET_MAIN)
-tests: $(TEST_BINS)
+tests: $(BINS_TESTS)
 # run all tests
 run-tests: tests
-	@for t in $(TEST_BINS); do echo "Running $$t:"; ./$$t; echo ""; done
+	@for t in $(BINS_TESTS); do echo "Running $$t:"; ./$$t; echo ""; done
 
 
 

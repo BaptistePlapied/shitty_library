@@ -14,6 +14,44 @@ void row_op_printf(row_op ope) {
     c_printf(ope.multiplier);
 }
 
+matrix *m_id(matrix *Result) {
+    if (!Result) {
+        fprintf(stderr, "ERROR: Input matrix is NULL\n");
+        return NULL;
+    }
+    for (uint64_t i = 0; i < Result->m; i++) {
+        for (uint64_t j = 0; j < Result->m; j++) {
+            if (i == j) {
+                Result->data[i * Result->m + j] = (complex){1.0, 0.0};
+            } else {
+                Result->data[i * Result->m + j] = (complex){0.0, 0.0};
+            }
+        }
+    }
+    return Result;
+}
+
+double m_norm2_offdiag(matrix *M) {
+    if (!M || M->m != M->n) {
+        fprintf(stderr, "ERROR: Matrix is NULL or not square in m_norm2_offdiag\n");
+        return -1.0;
+    }
+
+    double norm2 = 0.0;
+    uint64_t n = M->n;
+
+    for (uint64_t i = 0; i < n; i++) {
+        for (uint64_t j = 0; j < n; j++) {
+            if (i != j) {
+                complex z = M->data[i * n + j];
+                norm2 += z.Re * z.Re + z.Im * z.Im;
+            }
+        }
+    }
+
+    return norm2;
+}
+
 void echelon_expr_printf(echelon_expr echelon) {
     printf(" echelon : \n\tv_size : %llu\n\tnum_ops : %llu\n\tpivots :\n\t\t",
            echelon.v_size, echelon.num_ops);
@@ -28,7 +66,65 @@ void echelon_expr_printf(echelon_expr echelon) {
     printf("\n");
 }
 
-vector *backsub(matrix *U, vector *b, vector *result) {
+vector *forward_sub(matrix *L, vector *b, vector *result) {
+    if (!L || !b) {
+        fprintf(stderr, "ERROR: Input matrix or vector is NULL\n");
+        return NULL;
+    }
+    if (L->m != b->m || L->n != L->m) {
+        fprintf(stderr,
+                "ERROR: Matrix and vector dimensions are incompatible for forward_sub\n");
+        return NULL;
+    }
+
+    for (uint64_t i = 0; i < L->m; i++) {
+        for (uint64_t j = i + 1; j < L->n; j++) {
+            if (fabs(L->data[i * L->n + j].Re) > DBL_EPSILON ||
+                fabs(L->data[i * L->n + j].Im) > DBL_EPSILON) {
+                fprintf(stderr,
+                        "Erreur : la matrice n'est pas triangulaire inférieure.\n");
+                return NULL;
+            }
+        }
+    }
+
+    if (result) {
+        if (result->m != b->m) {
+            fprintf(stderr, "ERROR: Result vector has incompatible dimensions\n");
+            return NULL;
+        }
+    } else {
+        result = v_init(b->m);
+        if (!result)
+            return NULL;
+    }
+
+    vector *y = v_copy(b);
+
+    for (uint64_t i = 0; i < L->m; i++) {
+        for (uint64_t j = 0; j < i; j++) {
+            y->data[i] = c_sub(y->data[i], c_mult(L->data[i * L->n + j], y->data[j]));
+        }
+
+        complex pivot = L->data[i * L->n + i];
+        if (fabs(pivot.Re) < DBL_EPSILON && fabs(pivot.Im) < DBL_EPSILON) {
+            if (fabs(y->data[i].Re) > DBL_EPSILON || fabs(y->data[i].Im) > DBL_EPSILON) {
+                fprintf(stderr, "Aucune solution\n");
+                v_free(y);
+                return NULL;
+            } else {
+                fprintf(stderr, "Infinité de solutions\n");
+                v_free(y);
+                return NULL;
+            }
+        }
+        y->data[i] = c_div(y->data[i], pivot);
+    }
+
+    return y;
+}
+
+vector *back_sub(matrix *U, vector *b, vector *result) {
     if (!U || !b) {
         fprintf(stderr, "ERROR: Input matrix or vector is NULL\n");
         return NULL;
@@ -159,23 +255,6 @@ vector *v_apply_echelon(vector *a, echelon_expr *expr, vector *result) {
     return result;
 }
 
-matrix *m_id(matrix *Result) {
-    if (!Result) {
-        fprintf(stderr, "ERROR: Input matrix is NULL\n");
-        return NULL;
-    }
-    for (uint64_t i = 0; i < Result->m; i++) {
-        for (uint64_t j = 0; j < Result->m; j++) {
-            if (i == j) {
-                Result->data[i * Result->m + j] = (complex){1.0, 0.0};
-            } else {
-                Result->data[i * Result->m + j] = (complex){0.0, 0.0};
-            }
-        }
-    }
-    return Result;
-}
-
 void lu_pp(matrix *A, matrix *L, matrix *U, matrix *P, uint64_t *swap) {
     if (!A || !U || !L || !P) {
         fprintf(stderr, "ERROR: Input matrix is NULL\n");
@@ -232,6 +311,52 @@ void lu_pp(matrix *A, matrix *L, matrix *U, matrix *P, uint64_t *swap) {
     }
 }
 
+matrix *m_inv_lu(matrix *A, matrix *Result) {
+    if (!A || A->m != A->n) {
+        fprintf(stderr, "ERROR: Matrix must be square for inversion.\n");
+        return NULL;
+    }
+    if (Result) {
+        if (Result->m != A->m || Result->n != A->n) {
+            fprintf(stderr, "ERROR: Result matrix has incompatible dimensions\n");
+            return NULL;
+        }
+    } else {
+        Result = m_init(A->m, A->n);
+        if (!Result)
+            return NULL;
+    }
+    uint64_t n = A->n;
+    matrix *L = m_init(n, n);
+    matrix *U = m_init(n, n);
+    matrix *P = m_init(n, n);
+    if (!L || !U || !P) {
+        fprintf(stderr, "ERROR: Memory allocation failed.\n");
+        return NULL;
+    }
+    lu_pp(A, L, U, P, NULL);
+    vector *b_perm = v_init(n);
+    vector *y = v_init(n);
+    vector *x = v_init(n);
+    for (uint64_t col = 0; col < n; col++) {
+        for (uint64_t i = 0; i < n; i++) {
+            b_perm->data[i] =
+                P->data[i * n + col]; // P * e_j donne la col-ème colonne de P
+        }
+        forward_sub(L, b_perm, y);
+        back_sub(U, y, x);
+        for (uint64_t i = 0; i < n; i++)
+            Result->data[i * n + col] = x->data[i];
+    }
+    v_free(b_perm);
+    v_free(y);
+    v_free(x);
+    m_free(L);
+    m_free(U);
+    m_free(P);
+    return Result;
+}
+
 complex m_tr_det(matrix *A) {
     if (!A) {
         fprintf(stderr, "ERROR: Input matrix is NULL\n");
@@ -272,7 +397,7 @@ complex m_det(matrix *A) {
     return det;
 }
 
-void m_mgs_qr(matrix *A, matrix *Q, matrix *R) {
+void m_mgs(matrix *A, matrix *Q, matrix *R) {
     if (!A || !Q || !R) {
         fprintf(stderr, "ERROR: Input matrix is NULL\n");
         return;
@@ -289,47 +414,34 @@ void m_mgs_qr(matrix *A, matrix *Q, matrix *R) {
         fprintf(stderr, "ERROR: R matrix must be square with size A->n\n");
         return;
     }
-    uint64_t gid = find_empty_group_id();
-
     uint64_t m = A->m;
     uint64_t n = A->n;
-
-    vector *vj = v_init(m);
-    vector *qi = v_init(m);
-    vector *qj = v_init(m);
-
-    for (uint64_t j = 0; j < n; ++j) {
-        // Copy column j of A into vj
-        for (uint64_t i = 0; i < m; ++i)
-            vj->data[i] = A->data[i * n + j];
-        for (uint64_t i = 0; i < j; ++i) {
-            // Copy column i of Q into qi
-            for (uint64_t k = 0; k < m; ++k)
-                qi->data[k] = Q->data[k * n + i];
-            // R[i][j] = <q_i, v_j>
-            R->data[i * n + j] = v_dot_prod(qi, vj);
-            // vj -= R[i][j] * q_i
-            vj = v_sub(vj, v_track_in(v_scale(qi, R->data[i * n + j], NULL), gid), vj);
+    vector *v_j = v_init(m);
+    for (uint64_t j = 0; j < n; j++) {
+        for (uint64_t i = 0; i < m; i++) {
+            v_j->data[i] = A->data[i * n + j];
         }
-        // R[j][j] = ||vj||
-        complex rjj = c_sqrt(v_dot_prod(vj, vj));
-        if (c_norm2(rjj) == 0.0) {
-            fprintf(stderr, "ERROR: Linearly dependent columns at column %llu\n", j);
-            v_free(vj);
-            v_free(qi);
-            v_free(qj);
-            return;
+        for (uint64_t i = 0; i < j; i++) {
+            complex r_ij = c_zero();
+            for (uint64_t k = 0; k < m; k++) {
+                r_ij = c_add(c_mult(Q->data[k * n + i], v_j->data[k]), r_ij);
+            }
+            R->data[i * n + j] = r_ij;
+            for (uint64_t k = 0; k < m; k++) {
+                v_j->data[k] = c_sub(v_j->data[k], c_mult(r_ij, Q->data[k * n + i]));
+            }
         }
-        R->data[j * n + j] = rjj;
-        v_scale(vj, c_div((complex){1.0, 0.0}, rjj), qj);
-        // Store qj into Q
-        for (uint64_t i = 0; i < m; ++i)
-            Q->data[i * n + j] = qj->data[i];
+        complex r_jj = c_zero();
+        for (uint64_t i = 0; i < m; i++) {
+            r_jj = c_add(c_mult(v_j->data[i], v_j->data[i]), r_jj);
+        }
+        r_jj = c_sqrt(r_jj);
+        R->data[j * n + j] = r_jj;
+        for (uint64_t i = 0; i < m; i++) {
+            Q->data[i * n + j] = c_div(v_j->data[i], r_jj);
+        }
     }
-    v_free(vj);
-    v_free(qi);
-    v_free(qj);
-    track_group_clear(gid);
+    v_free(v_j);
 }
 
 vector *v_householder(vector *a, vector *result) {
@@ -372,27 +484,22 @@ void m_hessen_reduc(matrix *A, matrix *A_res, matrix *Q_tot) {
         fprintf(stderr, "ERROR: One or more input matrices are NULL\n");
         return;
     }
-
     if (A_res->m != A->m || A_res->n != A->n) {
         fprintf(stderr, "ERROR: A_res matrix has incompatible dimensions\n");
         return;
     }
-
     if (Q_tot->m != A->n || Q_tot->n != A->n) {
         fprintf(stderr, "ERROR: Q_tot matrix has incompatible dimensions\n");
         return;
     }
-
     uint64_t group_id = find_empty_group_id();
     m_copy_on(A, A_res);
-
     // Initialize Q_tot as identity
     for (uint64_t i = 0; i < A->m; i++) {
         for (uint64_t j = 0; j < A->m; j++) {
             Q_tot->data[i * A->n + j] = (i == j) ? c_real(1.0) : c_zero();
         }
     }
-
     for (uint64_t k = 0; k < A->n - 2; k++) {
         uint64_t sub_n = A->n - k - 1;
 
@@ -401,11 +508,11 @@ void m_hessen_reduc(matrix *A, matrix *A_res, matrix *Q_tot) {
         for (uint64_t i = 0; i < sub_n; i++) {
             x->data[i] = A_res->data[(k + 1 + i) * A_res->n + k];
         }
-
         // v = Householder(x)
         vector *v = v_householder(x, NULL);
         matrix *vv2 = m_scale_r(m_track_in(v_outer(v, v, NULL), group_id), 2.0, NULL);
-
+        matrix *VVᴴ = v_outer(v, v, NULL);
+        m_printf(VVᴴ);
         // Construct H_sub = I - 2vvᵗ
         matrix *H_sub = m_init(sub_n, sub_n);
         for (uint64_t i = 0; i < sub_n; i++) {
@@ -415,7 +522,6 @@ void m_hessen_reduc(matrix *A, matrix *A_res, matrix *Q_tot) {
                     c_sub(H_sub->data[i * sub_n + j], vv2->data[i * vv2->n + j]);
             }
         }
-
         // Embed H_sub into H_k (full-size)
         matrix *H_k = m_init(A->n, A->n);
         for (uint64_t i = 0; i < A->n; i++) {
@@ -423,7 +529,6 @@ void m_hessen_reduc(matrix *A, matrix *A_res, matrix *Q_tot) {
                 H_k->data[i * A->n + j] = (i == j) ? c_real(1.0) : c_zero();
             }
         }
-
         for (uint64_t i = 0; i < sub_n; i++) {
             for (uint64_t j = 0; j < sub_n; j++) {
                 H_k->data[(k + 1 + i) * A->n + (k + 1 + j)] =
@@ -431,15 +536,13 @@ void m_hessen_reduc(matrix *A, matrix *A_res, matrix *Q_tot) {
             }
         }
         // A_res ← H_k A_res H_kᵗ
-        matrix *H_k_T = m_track_in(m_transpose(H_k, NULL), group_id);
+        matrix *H_k_T = m_track_in(m_hermitian(H_k, NULL), group_id);
         matrix *A_temp =
             m_mult(H_k, m_track_in(m_mult(A_res, H_k_T, NULL), group_id), NULL);
         m_copy_on(A_temp, A_res);
-
         // Q_tot ← Q_tot × H_k
         matrix *Q_temp = m_mult(Q_tot, H_k, NULL);
         m_copy_on(Q_temp, Q_tot);
-
         // Cleanup
         m_free(A_temp);
         m_free(Q_temp);
@@ -448,7 +551,6 @@ void m_hessen_reduc(matrix *A, matrix *A_res, matrix *Q_tot) {
         m_free(H_sub);
         m_free(H_k);
     }
-
     track_group_clear(group_id);
 }
 
@@ -467,37 +569,210 @@ vector *qr_eigenvalues(matrix *A, double tol, int max_iter, vector *result) {
         if (!result)
             return NULL;
     }
-    uint64_t n = A->n;
-    matrix *H = m_init(n, n);
-    matrix *Q_tot = m_init(n, n);
+    matrix *R = m_init(A->m, A->n);
+    matrix *Q = m_init(A->m, A->n);
+    matrix *H = m_init(A->m, A->n);
+    m_copy_on(A, H);
+    matrix *I = m_init(A->m, A->n);
+    m_id(I);
+    matrix *H_shifted = m_init(A->m, A->n);
 
-    m_hessen_reduc(A, H, Q_tot);
-    matrix *Q = m_init(n, n);
-    matrix *R = m_init(n, n);
-    matrix *RQ = m_init(n, n);
+    for (uint64_t i = 0; i < max_iter; i++) {
+        complex shift = H->data[(A->n - 1) * A->n + (A->n - 1)];
 
-    for (uint64_t iter = 0; iter < max_iter; iter++) {
-        m_mgs_qr(H, Q, R);
-        m_mult(R, Q, RQ);
-        m_copy_on(RQ, H);
+        m_copy_on(H, H_shifted);
+        for (uint64_t i = 0; i < A->n; i++) {
+            H_shifted->data[i * A->n + i] = c_sub(H_shifted->data[i * A->n + i], shift);
+        }
+        m_mgs(H_shifted, Q, R);
+        m_mult(R, Q, H);
+        for (uint64_t i = 0; i < A->n; i++) {
+            H->data[i * A->n + i] = c_add(H->data[i * A->n + i], shift);
+        }
+        if (m_norm2_offdiag(H) < tol * tol)
+            break;
+    }
+    for (uint64_t i = 0; i < A->n; i++) {
+        result->data[i] = H->data[i * A->n + i];
+    }
+    printf("H : \n");
+    m_printf(H);
+    m_free(R);
+    m_free(Q);
+    m_free(H);
+    m_free(I);
+    m_free(H_shifted);
+    return result;
+}
 
-        double off_diag_norm = 0.0;
-        for (uint64_t i = 1; i < n; i++) {
-            for (uint64_t j = 0; j < i; j++) {
-                off_diag_norm += c_norm2(H->data[i * n + j]);
+vector **qr_eigenvectors(matrix *A, double tol, int max_iter, vector **result) {
+    if (!A || A->m != A->n) {
+        fprintf(stderr, "ERROR : Wrong input for qr_eigenvectors\n");
+        return NULL;
+    }
+    if (result) {
+        for (uint64_t i = 0; i < A->m; i++) {
+            if (result[i]->m != A->m) {
+                fprintf(stderr, "ERROR : incompatible dim for result eigen\n");
+                return NULL;
             }
         }
-        if (sqrt(off_diag_norm) < tol) {
-            break;
+    } else {
+        result = malloc(A->m * sizeof(vector *));
+        for (uint64_t i = 0; i < A->m; i++) {
+            result[i] = v_init(A->m);
+            if (!result[i]) {
+                fprintf(stderr, "ERROR : Failed to allocate result eigen vector\n");
+                return NULL;
+            }
         }
     }
-    for (uint64_t i = 0; i < n; i++) {
-        result->data[i] = H->data[i * n + i];
-    }
-    m_free(H);
-    m_free(Q_tot);
-    m_free(Q);
-    m_free(R);
+    matrix *R = m_init(A->m, A->n);
+    matrix *Q = m_init(A->m, A->n);
+    matrix *H = m_init(A->m, A->n);
+    m_copy_on(A, H);
+    matrix *V = m_init(A->m, A->n);
+    m_id(V);
+    matrix *V_temp = m_init(A->m, A->n);
+    matrix *I = m_init(A->m, A->n);
+    m_id(I);
+    matrix *H_shifted = m_init(A->m, A->n);
 
+    for (uint64_t i = 0; i < max_iter; i++) {
+        complex shift = H->data[(A->n - 1) * A->n + (A->n - 1)];
+
+        m_copy_on(H, H_shifted);
+        for (uint64_t i = 0; i < A->n; i++) {
+            H_shifted->data[i * A->n + i] = c_sub(H_shifted->data[i * A->n + i], shift);
+        }
+        m_mgs(H_shifted, Q, R);
+        m_mult(R, Q, H);
+        for (uint64_t i = 0; i < A->n; i++) {
+            H->data[i * A->n + i] = c_add(H->data[i * A->n + i], shift);
+        }
+        if (m_norm2_offdiag(H) < tol * tol)
+            break;
+        // Update eigenvectors
+        m_mult(V, Q, V_temp);
+        m_copy_on(V_temp, V);
+    }
+    for (uint64_t j = 0; j < A->n; j++) {
+        for (uint64_t i = 0; i < A->m; i++) {
+            result[j]->data[i] = V->data[i * A->n + j];
+        }
+    }
+    m_free(R);
+    m_free(Q);
+    m_free(H);
+    m_free(V);
+    m_free(V_temp);
+    m_free(I);
+    m_free(H_shifted);
     return result;
+}
+
+matrix *m_exp_pade(matrix *A, complex alpha, matrix *Result) {
+    if (!A || A->m != A->n) {
+        fprintf(stderr, "ERROR: Input matrix is NULL or not square.\n");
+        return NULL;
+    }
+    uint64_t n = A->n;
+    // Coefficients for Pade-13
+    double c[] = {64764752532480000.0,
+                  32382376266240000.0,
+                  7771770303897600.0,
+                  1187353796428800.0,
+                  129060195264000.0,
+                  10559470521600.0,
+                  670442572800.0,
+                  33522128640.0,
+                  1323241920.0,
+                  40840800.0,
+                  960960.0,
+                  16380.0,
+                  182.0,
+                  1.0};
+    // Scale A by alpha
+    matrix *A_scaled = m_init(n, n);
+    for (uint64_t i = 0; i < n * n; i++)
+        A_scaled->data[i] = c_mult(A->data[i], alpha);
+    // Compute norm for scaling
+    double norm = m_norm(A_scaled);
+    int s = 0;
+    if (norm > 0.5) {
+        s = (int)fmax(0, ceil(log2(norm / 0.5)));
+        complex inv_s = c_real(1.0 / pow(2.0, s));
+        m_scale(A_scaled, inv_s, A_scaled);
+    }
+    // Precompute powers of A
+    matrix *A2 = m_mult(A_scaled, A_scaled, NULL);
+    matrix *A4 = m_mult(A2, A2, NULL);
+    matrix *A6 = m_mult(A2, A4, NULL);
+    // U = A * (A6 * c13 + A4 * c11 + A2 * c9 + I * c7)
+    matrix *U = m_init(n, n);
+    matrix *term = m_init(n, n);
+    m_scale_r(A6, c[13], U);
+    m_scale_r(A4, c[11], term);
+    m_add(U, term, U);
+    m_scale_r(A2, c[9], term);
+    m_add(U, term, U);
+    matrix *I = m_init(n, n);
+    m_id(I);
+    m_scale_r(I, c[7], term);
+    m_add(U, term, U);
+    m_mult(A_scaled, U, U); // U = A * U
+    // V = A6 * c12 + A4 * c10 + A2 * c8 + I * c6
+    matrix *V = m_init(n, n);
+    m_scale_r(A6, c[12], V);
+    m_scale_r(A4, c[10], term);
+    m_add(V, term, V);
+    m_scale_r(A2, c[8], term);
+    m_add(V, term, V);
+    m_scale_r(I, c[6], term);
+    m_add(V, term, V);
+    // P = V + U
+    // Q = V - U
+    matrix *P = m_add(V, U, NULL);
+    matrix *Q = m_sub(V, U, NULL);
+
+    // Compute (Q)^-1
+    matrix *Qinv = m_inv_lu(Q, NULL);
+    if (!Qinv) {
+        fprintf(stderr, "ERROR: Matrix inversion failed.\n");
+        // Free and return
+        m_free(A_scaled);
+        m_free(A2);
+        m_free(A4);
+        m_free(A6);
+        m_free(U);
+        m_free(V);
+        m_free(I);
+        m_free(term);
+        m_free(P);
+        m_free(Q);
+        return NULL;
+    }
+
+    // Final result = Qinv * P
+    Result = m_mult(Qinv, P, Result);
+
+    // Undo scaling
+    for (int i = 0; i < s; i++) {
+        Result = m_mult(Result, Result, Result);
+    }
+
+    // Cleanup
+    m_free(A_scaled);
+    m_free(A2);
+    m_free(A4);
+    m_free(A6);
+    m_free(U);
+    m_free(V);
+    m_free(I);
+    m_free(term);
+    m_free(P);
+    m_free(Q);
+    m_free(Qinv);
+
+    return Result;
 }

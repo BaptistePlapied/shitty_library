@@ -384,7 +384,7 @@ complex v_dot_prod(vector *a, vector *b) {
     }
     complex result = {0, 0};
     for (uint64_t i = 0; i < a->m; i++) {
-        result = c_add(c_mult(a->data[i], b->data[i]), result);
+        result = c_add(c_mult(a->data[i], c_conj(b->data[i])), result);
     }
     return result;
 }

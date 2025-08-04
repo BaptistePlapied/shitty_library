@@ -24,7 +24,7 @@ static inline complex c_conj(complex a) { return (complex){a.Re, -a.Im}; }
 static inline complex c_abs(complex a) { return (complex){fabs(a.Re), fabs(a.Im)}; }
 static inline double c_norm2(complex a) { return a.Re * a.Re + a.Im * a.Im; }
 static inline double c_norm(complex a) { return sqrt(c_norm2(a)); }
-static inline double c_arg(complex a) { return atan2(a.Re, a.Im); }
+static inline double c_arg(complex a) { return atan2(a.Im, a.Re); }
 static inline complex c_mult(complex a, complex b) {
     return (complex){a.Re * b.Re - a.Im * b.Im, a.Re * b.Im + a.Im * b.Re};
 }
@@ -91,16 +91,20 @@ typedef struct {
 
 void echelon_expr_printf(echelon_expr echelon);
 
-vector *backsub(matrix *U, vector *b, vector *result);
+vector *forward_sub(matrix *L, vector *b, vector *result);
+vector *back_sub(matrix *U, vector *b, vector *result);
 matrix *m_echelon(matrix *A, echelon_expr *expression, matrix *Result);
 vector *v_apply_echelon(vector *a, echelon_expr *expr, vector *result);
 void lu_pp(matrix *A, matrix *L, matrix *U, matrix *P, uint64_t *swap);
+matrix *m_inv_lu(matrix *A, matrix *Result);
 complex m_tr_det(matrix *A);
 complex m_det(matrix *A);
-void m_mgs_qr(matrix *A, matrix *Q, matrix *R);
+void m_mgs(matrix *A, matrix *Q, matrix *R);
 vector *v_householder(vector *a, vector *result);
 void m_hessen_reduc(matrix *A, matrix *A_res, matrix *Q_tot);
 vector *qr_eigenvalues(matrix *A, double tol, int max_iter, vector *result);
+vector **qr_eigenvectors(matrix *A, double tol, int max_iter, vector **result);
+matrix *m_exp_pade(matrix *A, complex alpha, matrix *Result);
 
 // TRACKER
 

@@ -76,6 +76,22 @@ void m_free(matrix *A) {
     }
 }
 
+matrix *m_id(matrix *Result) {
+    if (!Result) {
+        fprintf(stderr, "ERROR: Input matrix is NULL\n");
+        return NULL;
+    }
+    for (uint64_t i = 0; i < Result->m; i++) {
+        for (uint64_t j = 0; j < Result->m; j++) {
+            if (i == j) {
+                Result->data[i * Result->m + j] = (complex){1.0, 0.0};
+            } else {
+                Result->data[i * Result->m + j] = (complex){0.0, 0.0};
+            }
+        }
+    }
+    return Result;
+}
 matrix *m_reshape(matrix *A, uint64_t m, uint64_t n) {
     if (!A) {
         fprintf(stderr, "ERROR: Input matrix array is NULL\n");
@@ -413,6 +429,27 @@ double m_norm2(matrix *A) {
     return norm2;
 }
 
+double m_norm2_offdiag(matrix *M) {
+    if (!M || M->m != M->n) {
+        fprintf(stderr, "ERROR: Matrix is NULL or not square in m_norm2_offdiag\n");
+        return -1.0;
+    }
+
+    double norm2 = 0.0;
+    uint64_t n = M->n;
+
+    for (uint64_t i = 0; i < n; i++) {
+        for (uint64_t j = 0; j < n; j++) {
+            if (i != j) {
+                complex z = M->data[i * n + j];
+                norm2 += z.Re * z.Re + z.Im * z.Im;
+            }
+        }
+    }
+
+    return norm2;
+}
+
 double m_norm(matrix *A) {
     if (!A) {
         fprintf(stderr, "ERROR: Input matrix is NULL\n");
@@ -451,6 +488,37 @@ matrix *m_mult(matrix *A, matrix *B, matrix *Result) {
         }
     }
     return Result;
+}
+
+vector *m_mult_v(matrix *A, vector *b, vector *result) {
+    if (!A || !b) {
+        fprintf(stderr, "ERROR: Input matrix or vector is NULL\n");
+        return NULL;
+    }
+    if (A->n != b->m) {
+        fprintf(
+            stderr,
+            "ERROR: Matrix and vector dimensions are incompatible for multiplication\n");
+        return NULL;
+    }
+    if (result) {
+        if (result->m != A->m) {
+            fprintf(stderr, "ERROR: Result vector has incompatible dimensions\n");
+            return NULL;
+        }
+    } else {
+        result = v_init(A->m);
+        if (!result)
+            return NULL;
+    }
+    for (uint64_t i = 0; i < A->m; i++) {
+        result->data[i] = (complex){0.0, 0.0};
+        for (uint64_t j = 0; j < A->n; j++) {
+            result->data[i] =
+                c_add(result->data[i], c_mult(A->data[i * A->n + j], b->data[j]));
+        }
+    }
+    return result;
 }
 
 matrix *v_outer(vector *a, vector *b, matrix *Result) {

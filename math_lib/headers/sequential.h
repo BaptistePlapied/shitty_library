@@ -64,8 +64,10 @@ matrix *m_scale_r(matrix *A, double alpha, matrix *Result);
 matrix *m_conj(matrix *A, matrix *Result); // Element-wise conjugate
 matrix *m_transpose(matrix *A, matrix *Result);
 matrix *m_hermitian(matrix *A, matrix *Result); // Conjugate transpose
-double m_norm(matrix *A);                       // sqrt(sum |mᵢⱼ|²)
-double m_norm2(matrix *A);                      // sum |mᵢⱼ|²
+matrix *m_id(matrix *Result);
+double m_norm(matrix *A);  // sqrt(sum |mᵢⱼ|²)
+double m_norm2(matrix *A); // sum |mᵢⱼ|²
+double m_norm2_offdiag(matrix *M);
 matrix *m_mult(matrix *A, matrix *B, matrix *Result);
 matrix *v_outer(vector *a, vector *b, matrix *Result);
 

@@ -7,6 +7,19 @@
 #include <stdio.h>
 #include <string.h>
 
+void printf_matrix(matrix *A) {
+    if (!A) {
+        printf("NULL matrix\n");
+        return;
+    }
+    for (uint64_t i = 0; i < A->m; i++) {
+        for (uint64_t j = 0; j < A->n; j++) {
+            printf("%lf+%lfi ", A->data[i * A->n + j].Re, A->data[i * A->n + j].Im);
+        }
+        printf("\n");
+    }
+}
+
 void test_v() {
     uint64_t dim_v = rand_dim_gen(5);
     vector *a = v_init(dim_v);
@@ -122,6 +135,7 @@ void test_eigenvalues() {
     rand_m_data_gen(A, 10);
     printf("A : \n");
     m_printf(A);
+    printf_matrix(A);
     vector *eigenvals = qr_eigenvalues(A, 1e-4, 100, NULL);
     printf("\n eigenvals :\n\t");
     v_printf(eigenvals);
@@ -135,12 +149,17 @@ void test_eigenvectors() {
     rand_m_data_Int_gen(A, 10);
     printf("A : \n");
     m_printf(A);
-    vector **eigenvecs = qr_eigenvectors(A, 1e-4, 100, NULL);
+    printf_matrix(A);
+    vector **eigenvecs = qr_eigenvectors(A, 1e-6, 100, NULL);
     printf("\n eigenvecs :\n");
     for (uint64_t i = 0; i < dim_m; i++) {
+        for (uint64_t j = 0; j < dim_m; j++) {
+            eigenvecs[i]->data[j] =
+                c_div(eigenvecs[i]->data[j], eigenvecs[i]->data[dim_m - 1]);
+        }
         v_printf(eigenvecs[i]);
     }
-    vector *eigenvals = qr_eigenvalues(A, 1e-4, 100, NULL);
+    vector *eigenvals = qr_eigenvalues(A, 1e-6, 100, NULL);
     printf("\n eigenvals :\n\t");
     v_printf(eigenvals);
 }
@@ -171,10 +190,30 @@ void test_hessenberg_reduction() {
     track_clear_all();
     printf("max_index : %llu\n", track_count());
 }
+
+void test_m_inv_lu() {
+    uint64_t dim_m = rand_dim_gen(5);
+    matrix *A = m_init(dim_m, dim_m);
+    /* rand_m_data_gen(A, 10); */
+    rand_m_data_Int_gen(A, 10);
+    /* m_id(A); */
+    printf("A : \n");
+    m_printf(A);
+    matrix *A_inv = m_init(dim_m, dim_m);
+    m_inv_lu(A, A_inv);
+    printf("A_inv : \n");
+    m_printf(A_inv);
+    matrix *I = m_mult(A, A_inv, NULL);
+    printf("I : \n");
+    m_printf(I);
+}
+
 int main() {
     rand_init_seed();
+    /* test_m_echelon(); */
     /* test_m_QR(); */
-    test_eigenvalues();
-    /* test_eigenvectors(); */
+    /* test_eigenvalues(); */
+    test_eigenvectors();
     /* test_hessenberg_reduction(); */
+    /* test_m_inv_lu(); */
 }

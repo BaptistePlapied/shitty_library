@@ -10,6 +10,24 @@
       "-Iinclude",
       "-c",
       "-o",
+      "build/display_ope.o",
+      "src/display_ope.c"
+    ],
+    "directory": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS",
+    "file": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/src/display_ope.c",
+    "output": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/build/display_ope.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-g",
+      "-I/usr/local/include",
+      "-I/usr/local/include/SDL2",
+      "-D_THREAD_SAFE",
+      "-Iinclude",
+      "-c",
+      "-o",
       "build/main.o",
       "src/main.c"
     ],
@@ -34,6 +52,60 @@
     "directory": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS",
     "file": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/src/matrix_ope.c",
     "output": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/build/matrix_ope.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-g",
+      "-I/usr/local/include",
+      "-I/usr/local/include/SDL2",
+      "-D_THREAD_SAFE",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "build/object_ope.o",
+      "src/object_ope.c"
+    ],
+    "directory": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS",
+    "file": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/src/object_ope.c",
+    "output": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/build/object_ope.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-g",
+      "-I/usr/local/include",
+      "-I/usr/local/include/SDL2",
+      "-D_THREAD_SAFE",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "build/vect_ope.o",
+      "src/vect_ope.c"
+    ],
+    "directory": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS",
+    "file": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/src/vect_ope.c",
+    "output": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/build/vect_ope.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-g",
+      "-I/usr/local/include",
+      "-I/usr/local/include/SDL2",
+      "-D_THREAD_SAFE",
+      "-S",
+      "-Iinclude",
+      "-o",
+      "build/bin/display_ope.s",
+      "src/display_ope.c"
+    ],
+    "directory": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS",
+    "file": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/src/display_ope.c",
+    "output": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/build/bin/display_ope.s"
   },
   {
     "arguments": [
@@ -70,5 +142,41 @@
     "directory": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS",
     "file": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/src/matrix_ope.c",
     "output": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/build/bin/matrix_ope.s"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-g",
+      "-I/usr/local/include",
+      "-I/usr/local/include/SDL2",
+      "-D_THREAD_SAFE",
+      "-S",
+      "-Iinclude",
+      "-o",
+      "build/bin/object_ope.s",
+      "src/object_ope.c"
+    ],
+    "directory": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS",
+    "file": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/src/object_ope.c",
+    "output": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/build/bin/object_ope.s"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-g",
+      "-I/usr/local/include",
+      "-I/usr/local/include/SDL2",
+      "-D_THREAD_SAFE",
+      "-S",
+      "-Iinclude",
+      "-o",
+      "build/bin/vect_ope.s",
+      "src/vect_ope.c"
+    ],
+    "directory": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS",
+    "file": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/src/vect_ope.c",
+    "output": "/Users/baptisteplapied/PrPj/PjCTe/BigPjC/GRAPHICS_TOOLS/build/bin/vect_ope.s"
   }
 ]

@@ -14,44 +14,6 @@ void row_op_printf(row_op ope) {
     c_printf(ope.multiplier);
 }
 
-matrix *m_id(matrix *Result) {
-    if (!Result) {
-        fprintf(stderr, "ERROR: Input matrix is NULL\n");
-        return NULL;
-    }
-    for (uint64_t i = 0; i < Result->m; i++) {
-        for (uint64_t j = 0; j < Result->m; j++) {
-            if (i == j) {
-                Result->data[i * Result->m + j] = (complex){1.0, 0.0};
-            } else {
-                Result->data[i * Result->m + j] = (complex){0.0, 0.0};
-            }
-        }
-    }
-    return Result;
-}
-
-double m_norm2_offdiag(matrix *M) {
-    if (!M || M->m != M->n) {
-        fprintf(stderr, "ERROR: Matrix is NULL or not square in m_norm2_offdiag\n");
-        return -1.0;
-    }
-
-    double norm2 = 0.0;
-    uint64_t n = M->n;
-
-    for (uint64_t i = 0; i < n; i++) {
-        for (uint64_t j = 0; j < n; j++) {
-            if (i != j) {
-                complex z = M->data[i * n + j];
-                norm2 += z.Re * z.Re + z.Im * z.Im;
-            }
-        }
-    }
-
-    return norm2;
-}
-
 void echelon_expr_printf(echelon_expr echelon) {
     printf(" echelon : \n\tv_size : %llu\n\tnum_ops : %llu\n\tpivots :\n\t\t",
            echelon.v_size, echelon.num_ops);
@@ -76,8 +38,7 @@ vector *forward_sub(matrix *L, vector *b, vector *result) {
                 "ERROR: Matrix and vector dimensions are incompatible for forward_sub\n");
         return NULL;
     }
-
-    for (uint64_t i = 0; i < L->m; i++) {
+    /* for (uint64_t i = 0; i < L->m; i++) {
         for (uint64_t j = i + 1; j < L->n; j++) {
             if (fabs(L->data[i * L->n + j].Re) > DBL_EPSILON ||
                 fabs(L->data[i * L->n + j].Im) > DBL_EPSILON) {
@@ -86,42 +47,43 @@ vector *forward_sub(matrix *L, vector *b, vector *result) {
                 return NULL;
             }
         }
-    }
-
+    } */
     if (result) {
         if (result->m != b->m) {
             fprintf(stderr, "ERROR: Result vector has incompatible dimensions\n");
             return NULL;
         }
+        for (uint64_t i = 0; i < b->m; i++) {
+            result->data[i] = b->data[i];
+        }
     } else {
-        result = v_init(b->m);
+        result = v_copy(b);
         if (!result)
             return NULL;
     }
-
-    vector *y = v_copy(b);
-
     for (uint64_t i = 0; i < L->m; i++) {
         for (uint64_t j = 0; j < i; j++) {
-            y->data[i] = c_sub(y->data[i], c_mult(L->data[i * L->n + j], y->data[j]));
+            result->data[i] =
+                c_sub(result->data[i], c_mult(L->data[i * L->n + j], result->data[j]));
         }
 
         complex pivot = L->data[i * L->n + i];
         if (fabs(pivot.Re) < DBL_EPSILON && fabs(pivot.Im) < DBL_EPSILON) {
-            if (fabs(y->data[i].Re) > DBL_EPSILON || fabs(y->data[i].Im) > DBL_EPSILON) {
+            if (fabs(result->data[i].Re) > DBL_EPSILON ||
+                fabs(result->data[i].Im) > DBL_EPSILON) {
                 fprintf(stderr, "Aucune solution\n");
-                v_free(y);
+                v_free(result);
                 return NULL;
             } else {
                 fprintf(stderr, "Infinité de solutions\n");
-                v_free(y);
+                v_free(result);
                 return NULL;
             }
         }
-        y->data[i] = c_div(y->data[i], pivot);
+        result->data[i] = c_div(result->data[i], pivot);
     }
 
-    return y;
+    return result;
 }
 
 vector *back_sub(matrix *U, vector *b, vector *result) {
@@ -134,7 +96,7 @@ vector *back_sub(matrix *U, vector *b, vector *result) {
                 "ERROR: Matrix and vector dimensions are incompatible for backsub\n");
         return NULL;
     }
-    for (uint64_t i = 1; i < U->m; i++) {
+    /* for (uint64_t i = 1; i < U->m; i++) {
         for (uint64_t j = 0; j < i; j++) {
             if (fabs(U->data[i * U->n + j].Re) > DBL_EPSILON ||
                 fabs(U->data[i * U->n + j].Im) > DBL_EPSILON) {
@@ -143,37 +105,41 @@ vector *back_sub(matrix *U, vector *b, vector *result) {
                 return NULL;
             }
         }
-    }
+    } */
     if (result) {
         if (result->m != b->m) {
             fprintf(stderr, "ERROR: Result vector has incompatible dimensions\n");
             return NULL;
         }
+        for (uint64_t i = 0; i < b->m; i++) {
+            result->data[i] = b->data[i];
+        }
     } else {
-        result = v_init(b->m);
+        result = v_copy(b);
         if (!result)
             return NULL;
     }
-    vector *x = v_copy(b);
     for (int64_t i = (int64_t)U->m - 1; i >= 0; i--) {
         for (uint64_t j = i + 1; j < U->n; j++) {
-            x->data[i] = c_sub(x->data[i], c_mult(U->data[i * U->n + j], x->data[j]));
+            result->data[i] =
+                c_sub(result->data[i], c_mult(U->data[i * U->n + j], result->data[j]));
         }
         complex pivot = U->data[i * U->n + i];
         if (fabs(pivot.Re) < DBL_EPSILON && fabs(pivot.Im) < DBL_EPSILON) {
-            if (fabs(x->data[i].Re) > DBL_EPSILON || fabs(x->data[i].Im) > DBL_EPSILON) {
+            if (fabs(result->data[i].Re) > DBL_EPSILON ||
+                fabs(result->data[i].Im) > DBL_EPSILON) {
                 fprintf(stderr, "Aucune solution\n");
-                v_free(x);
+                v_free(result);
                 return NULL;
             } else {
                 fprintf(stderr, "Infinité de solutions\n");
-                v_free(x);
+                v_free(result);
                 return NULL;
             }
         }
-        x->data[i] = c_div(x->data[i], pivot);
+        result->data[i] = c_div(result->data[i], pivot);
     }
-    return x;
+    return result;
 }
 
 matrix *m_echelon(matrix *A, echelon_expr *expr, matrix *Result) {
@@ -240,17 +206,17 @@ vector *v_apply_echelon(vector *a, echelon_expr *expr, vector *result) {
         if (!result)
             return NULL;
     }
-    for (uint64_t i = 0; i < expr->v_size; i++) {
-        result->data[i] = c_div(result->data[i], expr->pivots->data[i]);
-        for (uint64_t j = 0; j < expr->num_ops; j++) {
+    for (int64_t i = expr->v_size - 1; i >= 0; i--) {
+        for (int64_t j = expr->num_ops - 1; j >= 0; j--) {
             if (expr->operations[j].row_source == i) {
                 uint64_t k = expr->operations[j].row_target;
                 complex factor = expr->operations[j].multiplier;
-                result->data[k] = c_sub(result->data[k], c_mult(factor, result->data[i]));
-            } else if (expr->operations[j].row_source > i) {
+                result->data[i] = c_sub(result->data[i], c_mult(factor, result->data[k]));
+            } else if (expr->operations[j].row_source < i) {
                 break;
             }
         }
+        result->data[i] = c_div(result->data[i], expr->pivots->data[i]);
     }
     return result;
 }
@@ -340,13 +306,20 @@ matrix *m_inv_lu(matrix *A, matrix *Result) {
     vector *x = v_init(n);
     for (uint64_t col = 0; col < n; col++) {
         for (uint64_t i = 0; i < n; i++) {
-            b_perm->data[i] =
-                P->data[i * n + col]; // P * e_j donne la col-ème colonne de P
+            b_perm->data[i] = (complex){0.0, 0.0};
+        }
+        for (uint64_t i = 0; i < n; i++) {
+            if (fabs(P->data[i * n + col].Re - 1.0) < DBL_EPSILON &&
+                fabs(P->data[i * n + col].Im) < DBL_EPSILON) {
+                b_perm->data[i] = (complex){1.0, 0.0};
+                break;
+            }
         }
         forward_sub(L, b_perm, y);
         back_sub(U, y, x);
-        for (uint64_t i = 0; i < n; i++)
+        for (uint64_t i = 0; i < n; i++) {
             Result->data[i * n + col] = x->data[i];
+        }
     }
     v_free(b_perm);
     v_free(y);
@@ -355,6 +328,41 @@ matrix *m_inv_lu(matrix *A, matrix *Result) {
     m_free(U);
     m_free(P);
     return Result;
+}
+
+vector *solve_lu(matrix *A, vector *b, vector *result) {
+    if (!A || !b || A->m != A->n || A->m != b->m) {
+        fprintf(stderr, "ERROR: Invalid input for solve_lu\n");
+        return NULL;
+    }
+    if (result) {
+        if (result->m != b->m) {
+            fprintf(stderr, "ERROR: Result vector has incompatible dimensions\n");
+            return NULL;
+        }
+    } else {
+        result = v_init(b->m);
+        if (!result)
+            return NULL;
+    }
+    matrix *L = m_init(A->m, A->n);
+    matrix *U = m_init(A->m, A->n);
+    matrix *P = m_init(A->m, A->n);
+    lu_pp(A, L, U, P, NULL);
+    vector *y = forward_sub(L, b, NULL);
+    if (!y) {
+        m_free(L);
+        m_free(U);
+        m_free(P);
+        v_free(result);
+        return NULL;
+    }
+    back_sub(U, y, result);
+    v_free(y);
+    m_free(L);
+    m_free(U);
+    m_free(P);
+    return result;
 }
 
 complex m_tr_det(matrix *A) {
@@ -397,6 +405,10 @@ complex m_det(matrix *A) {
     return det;
 }
 
+// TODO: make it support close qr_eigenvalues
+//       maybe use also Householder for stability
+//       and use m_hessen_reduc to reduce the matrix to Hessenberg form
+//       then use m_mgs to compute Q and R
 void m_mgs(matrix *A, matrix *Q, matrix *R) {
     if (!A || !Q || !R) {
         fprintf(stderr, "ERROR: Input matrix is NULL\n");
@@ -424,21 +436,21 @@ void m_mgs(matrix *A, matrix *Q, matrix *R) {
         for (uint64_t i = 0; i < j; i++) {
             complex r_ij = c_zero();
             for (uint64_t k = 0; k < m; k++) {
-                r_ij = c_add(c_mult(Q->data[k * n + i], v_j->data[k]), r_ij);
+                r_ij = c_add(c_mult(c_conj(Q->data[k * n + i]), v_j->data[k]), r_ij);
             }
             R->data[i * n + j] = r_ij;
             for (uint64_t k = 0; k < m; k++) {
                 v_j->data[k] = c_sub(v_j->data[k], c_mult(r_ij, Q->data[k * n + i]));
             }
         }
-        complex r_jj = c_zero();
+        double r_jj = 0.0;
         for (uint64_t i = 0; i < m; i++) {
-            r_jj = c_add(c_mult(v_j->data[i], v_j->data[i]), r_jj);
+            r_jj += c_norm2(v_j->data[i]);
         }
-        r_jj = c_sqrt(r_jj);
-        R->data[j * n + j] = r_jj;
+        r_jj = sqrt(r_jj);
+        R->data[j * n + j] = (complex){r_jj, 0.0};
         for (uint64_t i = 0; i < m; i++) {
-            Q->data[i * n + j] = c_div(v_j->data[i], r_jj);
+            Q->data[i * n + j] = c_div(v_j->data[i], (complex){r_jj, 0.0});
         }
     }
     v_free(v_j);
@@ -605,6 +617,8 @@ vector *qr_eigenvalues(matrix *A, double tol, int max_iter, vector *result) {
     return result;
 }
 
+// TODO: remake it it doesn't really work most of the time
+//       but for now good enough
 vector **qr_eigenvectors(matrix *A, double tol, int max_iter, vector **result) {
     if (!A || A->m != A->n) {
         fprintf(stderr, "ERROR : Wrong input for qr_eigenvectors\n");
@@ -671,6 +685,9 @@ vector **qr_eigenvectors(matrix *A, double tol, int max_iter, vector **result) {
     return result;
 }
 
+// WARNING: This function is not optimized for performance and may not handle all edge
+// cases.
+//          and not sure it works correctly must do tests
 matrix *m_exp_pade(matrix *A, complex alpha, matrix *Result) {
     if (!A || A->m != A->n) {
         fprintf(stderr, "ERROR: Input matrix is NULL or not square.\n");
@@ -734,7 +751,6 @@ matrix *m_exp_pade(matrix *A, complex alpha, matrix *Result) {
     // Q = V - U
     matrix *P = m_add(V, U, NULL);
     matrix *Q = m_sub(V, U, NULL);
-
     // Compute (Q)^-1
     matrix *Qinv = m_inv_lu(Q, NULL);
     if (!Qinv) {
@@ -752,15 +768,12 @@ matrix *m_exp_pade(matrix *A, complex alpha, matrix *Result) {
         m_free(Q);
         return NULL;
     }
-
     // Final result = Qinv * P
     Result = m_mult(Qinv, P, Result);
-
     // Undo scaling
     for (int i = 0; i < s; i++) {
         Result = m_mult(Result, Result, Result);
     }
-
     // Cleanup
     m_free(A_scaled);
     m_free(A2);
@@ -776,3 +789,45 @@ matrix *m_exp_pade(matrix *A, complex alpha, matrix *Result) {
 
     return Result;
 }
+
+// CLEAR: 1. Opérations matricielles et vectorielles
+//   - m_ajd, m_sub, m_scalar_mult
+//   - m_mult (matrice × matrice), m_mult_vec (matrice × vecteur)
+//   - v_add, v_sub, v_scalar_mult, v_dot (produit scalaire avec conj sur le premier)
+
+// CLEAR: 2. Solveurs linéaires
+//   - forward_sub (système triangulaire inférieur)
+//   - back_sub (système triangulaire supérieur)
+//   - lu_pp (décomposition LU avec pivot partiel)
+//   - m_inv_lu (inversion via LU)
+//   - solve_lu (résout Ax = b via LU)
+
+// TODO  3. EDP dans le file edp.c
+
+// TODO: 4. Schémas temporels (itératifs)
+//   - step_forward_euler(A, u, dt)
+//   - step_backward_euler(A, u, dt) → nécessite solve_lu
+//   - step_crank_nicolson(A, u, dt)
+//   - step_runge_kutta(A, u, dt) (optionnel)
+
+// TODO: 5. Exponentielle de matrice (si méthode exacte)
+//   - m_pade(A) (approximation de Padé avec scaling & squaring)
+//   - m_exp_diag(D) (exp d'une matrice diagonale)
+//   - m_exp_via_diag(A) (via décomposition en valeurs/vecteurs propres)
+
+// TODO: 6. Éigen décomposition (optionnel mais utile)
+//   - eig(A, D, V) (valeurs propres D, vecteurs propres V)
+//   - power_iteration, inverse_iteration
+
+// TODO: 7. Gestion des conditions aux limites
+//   - Appliquer Dirichlet / Neumann dans la matrice ou le vecteur source
+//   - Adapter build_system_matrix en conséquence
+
+// TODO: 8. Debug & vérifications
+//   - m_norm_offdiag(A) (norme hors diagonale pour vérifier diag dominance)
+//   - Résidu r = b - Ax pour valider solveurs
+//   - Impression partielle de matrices/vecteurs pour inspection
+
+// TODO: 9. Visualisation / sortie
+//   - Exporter résultats en CSV
+//   - Script Python/gnuplot pour tracer l’évolution
